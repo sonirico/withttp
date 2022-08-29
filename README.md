@@ -6,8 +6,8 @@ of http requests and responses open for the user to allow maximun flexibility.
 
 Supported underlying http implementations are:
 
- - net/url
- - fasthttp
+ - [net/http](https://pkg.go.dev/net/http)
+ - [fasthttp](https://pkg.go.dev/github.com/valyala/fasthttp)
  - open an issue to include your preferred one!
 
 #### Query Restful endpoints
