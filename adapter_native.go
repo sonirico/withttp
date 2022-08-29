@@ -41,6 +41,10 @@ func (a *nativeReqAdapter) SetBody(body io.ReadCloser) {
 	a.req.Body = body
 }
 
+func (a *nativeReqAdapter) URL() *url.URL {
+	return a.req.URL
+}
+
 func adaptReqNative(req *http.Request) Request {
 	return &nativeReqAdapter{req: req}
 }
@@ -58,8 +62,12 @@ func (a *NativeHttpClientAdapter) Do(ctx context.Context, req Request) (Response
 	return adaptResNative(res), err
 }
 
-func NewNativeHttpClientAdapter() *NativeHttpClientAdapter {
-	return &NativeHttpClientAdapter{cli: http.DefaultClient}
+func NewNativeHttpClientAdapter(cli *http.Client) *NativeHttpClientAdapter {
+	return &NativeHttpClientAdapter{cli: cli}
+}
+
+func NewDefaultNativeHttpClientAdapter() *NativeHttpClientAdapter {
+	return NewNativeHttpClientAdapter(http.DefaultClient)
 }
 
 func adaptResNative(res *http.Response) Response {

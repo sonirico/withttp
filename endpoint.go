@@ -13,6 +13,8 @@ type (
 		AddHeader(k, v string)
 		SetURL(*url.URL)
 		SetBody(rc io.ReadCloser)
+
+		URL() *url.URL
 	}
 
 	Response interface {
@@ -62,10 +64,16 @@ func (f ReqOptionFunc) Configure(req Request) error {
 	return f(req)
 }
 
-func New(name string, opts ...ResOption) *Endpoint {
-	e := &Endpoint{name: name}
-	for _, opt := range opts {
-		e.responseOpts = append(e.responseOpts, opt)
-	}
+func (e *Endpoint) Request(opts ...ReqOption) *Endpoint {
+	e.requestOpts = append(e.requestOpts, opts...)
 	return e
+}
+
+func (e *Endpoint) Response(opts ...ResOption) *Endpoint {
+	e.responseOpts = append(e.responseOpts, opts...)
+	return e
+}
+
+func NewEndpoint(name string) *Endpoint {
+	return &Endpoint{name: name}
 }

@@ -130,6 +130,14 @@ func (c *Call[T]) Call(ctx context.Context, e *Endpoint) (err error) {
 	return
 }
 
+func (c *Call[T]) WithURL(raw string) *Call[T] {
+	return c.withReq(WithURL(raw))
+}
+
+func (c *Call[T]) WithURI(raw string) *Call[T] {
+	return c.withReq(WithURI(raw))
+}
+
 func (c *Call[T]) WithMethod(method string) *Call[T] {
 	return c.withReq(
 		ReqOptionFunc(func(req Request) error {

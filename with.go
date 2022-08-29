@@ -63,7 +63,7 @@ func WithExpectedStatusCodes[T any](states ...int) CallResOptionFunc[T] {
 		}
 
 		if !found {
-			return errors.Wrapf(ErrUnexpectedStatusCode, "expected: %v", states)
+			return errors.Wrapf(ErrUnexpectedStatusCode, "want: %v, have: %d", states, res.Status())
 		}
 
 		return nil
@@ -105,6 +105,13 @@ func WithURL(raw string) ReqOption {
 
 		req.SetURL(u)
 
+		return
+	})
+}
+
+func WithURI(raw string) ReqOption {
+	return ReqOptionFunc(func(req Request) (err error) {
+		req.SetURL(req.URL().JoinPath(raw))
 		return
 	})
 }
