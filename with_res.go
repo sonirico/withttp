@@ -32,20 +32,20 @@ func WithParseBodyRaw[T any]() CallResOptionFunc[T] {
 	}
 }
 
-func WithJSON[T any]() CallResOptionFunc[T] {
+func WithParseJSON[T any]() CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		c.BodyParsed, err = ReadJSON[T](c.bodyReader(res))
 		return
 	}
 }
 
-func WithStream[T any](factory StreamFactory[T], fn func(T) bool) CallResOptionFunc[T] {
+func WithParseStream[T any](factory StreamFactory[T], fn func(T) bool) CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		return ReadStream[T](c.bodyReader(res), factory, fn)
 	}
 }
 
-func WithStreamChan[T any](factory StreamFactory[T], out chan<- T) CallResOptionFunc[T] {
+func WithParseStreamChan[T any](factory StreamFactory[T], out chan<- T) CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		return ReadStreamChan(c.bodyReader(res), factory, out)
 	}

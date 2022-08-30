@@ -1,5 +1,6 @@
 package codec
 
 var (
-	NativeJSONCodec = NewNativeJsonCodec()
+	NativeJSONCodec        = NewNativeJsonCodec()
+	NativeJSONEachRowCodec = NewNativeJsonEachRowCodec(NativeJSONCodec)
 )

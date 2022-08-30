@@ -44,7 +44,7 @@ func main() {
 			override = true
 			return
 		}).
-		WithJSONEachRowChan(res).
+		WithParseJSONEachRowChan(res).
 		WithExpectedStatusCodes(http.StatusOK)
 
 	go func() {

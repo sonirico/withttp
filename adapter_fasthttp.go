@@ -11,6 +11,8 @@ import (
 
 type (
 	fastHttpReqAdapter struct {
+		stream io.ReadWriteCloser
+
 		req *fasthttp.Request
 	}
 
@@ -58,9 +60,9 @@ func (a *fastHttpReqAdapter) SetURL(u *url.URL) {
 	}
 }
 
-func (a *fastHttpReqAdapter) SetBodyStream(body io.ReadCloser, bodySize int) {
-	// TODO: Caveat. Content type may be unknown at the time of setting streams.
-	a.req.SetBodyStream(body, bodySize)
+func (a *fastHttpReqAdapter) SetBodyStream(body io.ReadWriteCloser, bodySize int) {
+	a.stream = body
+	a.req.SetBodyStream(a.stream, bodySize)
 }
 
 func (a *fastHttpReqAdapter) SetBody(body []byte) {
@@ -71,8 +73,8 @@ func (a *fastHttpReqAdapter) Body() []byte {
 	return a.req.Body()
 }
 
-func (a *fastHttpReqAdapter) BodyStream() io.ReadCloser {
-	return io.NopCloser(bytes.NewReader(a.req.Body()))
+func (a *fastHttpReqAdapter) BodyStream() io.ReadWriteCloser {
+	return a.stream
 }
 
 func (a *fastHttpReqAdapter) URL() *url.URL {
@@ -125,7 +127,7 @@ func adaptResFastHttp(res *fasthttp.Response) Response {
 }
 
 func (a *fastHttpResAdapter) SetBody(body io.ReadCloser) {
-	a.res.SetBodyStream(body, 0)
+	a.res.SetBodyStream(body, -1)
 }
 
 func (a *fastHttpResAdapter) Status() int {
