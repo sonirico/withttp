@@ -1,3 +1,5 @@
+![build](https://github.com/sonirico/withttp/actions/workflows/go.yml/badge.svg)
+
 # withttp
 
 Build http requests and parse their responses with fluent syntax and wit. This package aims
