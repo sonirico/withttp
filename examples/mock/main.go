@@ -14,7 +14,7 @@ import (
 
 var (
 	exchangeListOrders = withttp.NewEndpoint("ListOrders").
-				Request(withttp.WithURL("http://example.com")).
+				Request(withttp.WithBaseURL("http://example.com")).
 				Response(
 			withttp.WithMockedRes(func(res withttp.Response) {
 				res.SetBody(io.NopCloser(bytes.NewReader(mockResponse)))
@@ -53,7 +53,7 @@ func main() {
 		}
 	}()
 
-	err := call.Call(context.Background(), exchangeListOrders)
+	err := call.CallEndpoint(context.Background(), exchangeListOrders)
 
 	if err != nil {
 		panic(err)

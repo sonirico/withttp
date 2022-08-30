@@ -17,6 +17,9 @@ type (
 		SetBodyStream(rc io.ReadCloser, bodySize int)
 		SetBody([]byte)
 
+		Body() []byte
+		BodyStream() io.ReadCloser
+
 		URL() *url.URL
 	}
 

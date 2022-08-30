@@ -47,6 +47,15 @@ func (a *nativeReqAdapter) SetBody(payload []byte) {
 	a.req.Body = io.NopCloser(bytes.NewReader(payload))
 }
 
+func (a *nativeReqAdapter) Body() []byte {
+	bts, _ := io.ReadAll(a.req.Body)
+	return bts
+}
+
+func (a *nativeReqAdapter) BodyStream() io.ReadCloser {
+	return a.req.Body
+}
+
 func (a *nativeReqAdapter) URL() *url.URL {
 	return a.req.URL
 }

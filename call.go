@@ -12,12 +12,18 @@ type (
 		Parse(c *Call[T], r Response) error
 	}
 
+	CalReqOption[T any] interface {
+		Configure(c *Call[T], r Request) error
+	}
+
+	CallReqOptionFunc[T any] func(c *Call[T], res Request) error
+
 	CallResOptionFunc[T any] func(c *Call[T], res Response) error
 
 	Call[T any] struct {
 		client client
 
-		reqOptions []ReqOption
+		reqOptions []ReqOption // TODO: Linked Lists
 		resOptions []ResOption
 
 		Req Request
@@ -26,12 +32,17 @@ type (
 		BodyRaw    []byte
 		BodyParsed T
 
-		ReqBodyRaw []byte
+		ReqContentType ContentType
+		ReqBodyRaw     []byte
 	}
 )
 
 func (f CallResOptionFunc[T]) Parse(c *Call[T], res Response) error {
 	return f(c, res)
+}
+
+func (f CallReqOptionFunc[T]) Configure(c *Call[T], req Request) error {
+	return f(c, req)
 }
 
 func NewCall[T any](client client) *Call[T] {
@@ -57,10 +68,12 @@ func (c *Call[T]) withRes(fn CallResOption[T]) *Call[T] {
 	return c
 }
 
-func (c *Call[T]) withReq(fn ReqOption) *Call[T] {
+func (c *Call[T]) withReq(fn CallReqOptionFunc[T]) *Call[T] {
 	c.reqOptions = append(
 		c.reqOptions,
-		fn,
+		ReqOptionFunc(func(req Request) error {
+			return fn.Configure(c, req)
+		}),
 	)
 	return c
 }
@@ -84,9 +97,7 @@ func (c *Call[T]) configureReq(req Request) error {
 }
 
 func (c *Call[T]) Request(opts ...ReqOption) *Call[T] {
-	for _, opt := range opts {
-		c.withReq(opt)
-	}
+	c.reqOptions = append(c.reqOptions, opts...)
 	return c
 }
 
@@ -95,8 +106,36 @@ func (c *Call[T]) Response(opts ...ResOption) *Call[T] {
 	return c
 }
 
-func (c *Call[T]) Call(ctx context.Context, e *Endpoint) (err error) {
+func (c *Call[T]) Call(ctx context.Context) (err error) {
 	req, err := c.client.Request()
+	defer func() { c.Req = req }()
+
+	if err != nil {
+		return
+	}
+
+	if err = c.configureReq(req); err != nil {
+		return
+	}
+
+	res, err := c.client.Do(ctx, req)
+
+	if err != nil {
+		return
+	}
+
+	defer func() { c.Res = res }()
+
+	if err = c.parseRes(res); err != nil {
+		return
+	}
+
+	return
+}
+
+func (c *Call[T]) CallEndpoint(ctx context.Context, e *Endpoint) (err error) {
+	req, err := c.client.Request()
+	defer func() { c.Req = req }()
 
 	if err != nil {
 		return
@@ -118,6 +157,8 @@ func (c *Call[T]) Call(ctx context.Context, e *Endpoint) (err error) {
 		return
 	}
 
+	defer func() { c.Res = res }()
+
 	for _, opt := range e.responseOpts {
 		if err = opt.Parse(res); err != nil {
 			return
@@ -132,40 +173,29 @@ func (c *Call[T]) Call(ctx context.Context, e *Endpoint) (err error) {
 }
 
 func (c *Call[T]) WithURL(raw string) *Call[T] {
-	return c.withReq(WithURL(raw))
+	return c.withReq(WithURL[T](raw))
 }
 
 func (c *Call[T]) WithURI(raw string) *Call[T] {
-	return c.withReq(WithURI(raw))
+	return c.withReq(WithURI[T](raw))
 }
 
 func (c *Call[T]) WithMethod(method string) *Call[T] {
-	return c.withReq(
-		ReqOptionFunc(func(req Request) error {
-			req.SetMethod(method)
-			return nil
-		}),
-	)
+	return c.withReq(WithMethod[T](method))
 }
 
 // WithBodyStream receives a stream of data to set on the request. Second parameter `bodySize` indicates
 // the estimated content-length of this stream. Required when employing fasthttp http client.
 func (c *Call[T]) WithBodyStream(rc io.ReadCloser, bodySize int) *Call[T] {
-	return c.withReq(
-		ReqOptionFunc(func(req Request) error {
-			req.SetBodyStream(rc, bodySize)
-			return nil
-		}),
-	)
+	return c.withReq(WithBodyStream[T](rc, bodySize))
+}
+
+func (c *Call[T]) WithBody(payload any) *Call[T] {
+	return c.withReq(WithBody[T](payload))
 }
 
 func (c *Call[T]) WithRawBody(payload []byte) *Call[T] {
-	return c.withReq(
-		ReqOptionFunc(func(req Request) error {
-			req.SetBody(payload)
-			return nil
-		}),
-	)
+	return c.withReq(WithRawBody[T](payload))
 }
 
 func (c *Call[T]) WithContentLength(length int) *Call[T] {
@@ -173,24 +203,19 @@ func (c *Call[T]) WithContentLength(length int) *Call[T] {
 }
 
 func (c *Call[T]) WithHeader(key, value string, override bool) *Call[T] {
-	return c.withReq(
-		ReqOptionFunc(func(req Request) error {
-			return ConfigureHeader(req, key, value, override)
-		}),
-	)
+	return c.withReq(WithHeader[T](key, value, override))
 }
 
 func (c *Call[T]) WithHeaderFunc(fn func() (key, value string, override bool)) *Call[T] {
-	return c.withReq(
-		ReqOptionFunc(func(req Request) error {
-			key, value, override := fn()
-			return ConfigureHeader(req, key, value, override)
-		}),
-	)
+	return c.withReq(WithHeaderFunc[T](fn))
+}
+
+func (c *Call[T]) WithContentType(ct ContentType) *Call[T] {
+	return c.withReq(WithContentType[T](ct))
 }
 
 func (c *Call[T]) WithReadBody() *Call[T] {
-	return c.withRes(WithRawBody[T]())
+	return c.withRes(WithParseBodyRaw[T]())
 }
 
 func (c *Call[T]) WithStreamChan(factory StreamFactory[T], ch chan<- T) *Call[T] {
@@ -213,7 +238,7 @@ func (c *Call[T]) WithIgnoreBody() *Call[T] {
 	return c.withRes(WithIgnoredBody[T]())
 }
 
-func (c *Call[T]) WithJSON() *Call[T] {
+func (c *Call[T]) WithParseJSON() *Call[T] {
 	return c.withRes(WithJSON[T]())
 }
 

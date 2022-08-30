@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sonirico/withttp/codec"
-
 	"github.com/sonirico/withttp"
 )
 
 var (
 	githubApi = withttp.NewEndpoint("GithubAPI").
-		Request(withttp.WithURL("https://api.github.com/"))
+		Request(withttp.WithBaseURL("https://api.github.com/"))
 )
 
 type GithubRepoInfo struct {
@@ -33,10 +31,10 @@ func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
 			override = true
 			return
 		}).
-		WithJSON().
+		WithParseJSON().
 		WithExpectedStatusCodes(http.StatusOK)
 
-	err := call.Call(context.Background(), githubApi)
+	err := call.CallEndpoint(context.Background(), githubApi)
 
 	return call.BodyParsed, err
 }
@@ -59,35 +57,34 @@ func CreateRepoIssue(user, repo, title, body, assignee string) (GithubCreateIssu
 		Assignee: assignee,
 	}
 
-	data, err := codec.NewNativeJsonCodec().Encode(p)
-	if err != nil {
-		panic(err)
-	}
-
 	call := withttp.NewCall[GithubCreateIssueResponse](
 		withttp.NewDefaultFastHttpHttpClientAdapter(),
 	).
-		//WithURI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
-		WithURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb").
+		WithURI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
 		WithMethod(http.MethodPost).
-		WithRawBody(data).
-		WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
+		WithContentType("application/vnd+github+json").
+		WithBody(p).
 		WithHeaderFunc(func() (key, value string, override bool) {
-			key = "X-Date"
-			value = time.Now().String()
+			key = "Authorization"
+			value = fmt.Sprintf("Bearer %s", "S3cret")
 			override = true
 			return
 		}).
-		WithExpectedStatusCodes(http.StatusOK)
+		WithExpectedStatusCodes(http.StatusCreated)
 
-	err = call.Call(context.Background(), githubApi)
+	err := call.CallEndpoint(context.Background(), githubApi)
+
+	log.Println("req body", string(call.Req.Body()))
 
 	return call.BodyParsed, err
 }
 
 func main() {
-	//info, _ := GetRepoInfo("sonirico", "withttp")
-	//log.Println(info)
+	// Fetch repo info
+	info, _ := GetRepoInfo("sonirico", "withttp")
+	log.Println(info)
+
+	// Create an issue
 	res, err := CreateRepoIssue("sonirico", "withttp", "test",
 		"This is a test", "sonirico")
 	log.Println(res, err)

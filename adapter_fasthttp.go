@@ -67,6 +67,14 @@ func (a *fastHttpReqAdapter) SetBody(body []byte) {
 	a.req.SetBody(body)
 }
 
+func (a *fastHttpReqAdapter) Body() []byte {
+	return a.req.Body()
+}
+
+func (a *fastHttpReqAdapter) BodyStream() io.ReadCloser {
+	return io.NopCloser(bytes.NewReader(a.req.Body()))
+}
+
 func (a *fastHttpReqAdapter) URL() *url.URL {
 	uri := a.req.URI()
 
