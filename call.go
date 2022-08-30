@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strconv"
 )
 
 type (
@@ -147,13 +148,28 @@ func (c *Call[T]) WithMethod(method string) *Call[T] {
 	)
 }
 
-func (c *Call[T]) WithRawBody(payload []byte) *Call[T] {
+// WithBodyStream receives a stream of data to set on the request. Second parameter `bodySize` indicates
+// the estimated content-length of this stream. Required when employing fasthttp http client.
+func (c *Call[T]) WithBodyStream(rc io.ReadCloser, bodySize int) *Call[T] {
 	return c.withReq(
 		ReqOptionFunc(func(req Request) error {
-			req.SetBody(io.NopCloser(bytes.NewReader(payload)))
+			req.SetBodyStream(rc, bodySize)
 			return nil
 		}),
 	)
+}
+
+func (c *Call[T]) WithRawBody(payload []byte) *Call[T] {
+	return c.withReq(
+		ReqOptionFunc(func(req Request) error {
+			req.SetBody(payload)
+			return nil
+		}),
+	)
+}
+
+func (c *Call[T]) WithContentLength(length int) *Call[T] {
+	return c.WithHeader("content-length", strconv.FormatInt(int64(length), 10), true)
 }
 
 func (c *Call[T]) WithHeader(key, value string, override bool) *Call[T] {

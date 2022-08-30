@@ -1,6 +1,7 @@
 package withttp
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -37,8 +38,13 @@ func (a *nativeReqAdapter) SetURL(u *url.URL) {
 	a.req.URL = u
 }
 
-func (a *nativeReqAdapter) SetBody(body io.ReadCloser) {
+func (a *nativeReqAdapter) SetBodyStream(body io.ReadCloser, _ int) {
 	a.req.Body = body
+}
+
+func (a *nativeReqAdapter) SetBody(payload []byte) {
+	// TODO: pool these readers
+	a.req.Body = io.NopCloser(bytes.NewReader(payload))
 }
 
 func (a *nativeReqAdapter) URL() *url.URL {

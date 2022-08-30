@@ -12,7 +12,10 @@ type (
 		SetHeader(k, v string)
 		AddHeader(k, v string)
 		SetURL(*url.URL)
-		SetBody(rc io.ReadCloser)
+		// SetBodyStream sets the stream of body data belonging to a request. bodySize parameter is needed
+		// when using fasthttp implementation.
+		SetBodyStream(rc io.ReadCloser, bodySize int)
+		SetBody([]byte)
 
 		URL() *url.URL
 	}

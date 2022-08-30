@@ -80,7 +80,7 @@ func WithAssertion[T any](fn func(res Response) error) CallResOptionFunc[T] {
 	}
 }
 
-func WithResMock(fn func(response Response)) ResOption {
+func WithMockedRes(fn func(response Response)) ResOption {
 	return ResOptionFunc(func(res Response) (err error) {
 		fn(res)
 		return

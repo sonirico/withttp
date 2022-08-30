@@ -16,7 +16,7 @@ var (
 	exchangeListOrders = withttp.NewEndpoint("ListOrders").
 				Request(withttp.WithURL("http://example.com")).
 				Response(
-			withttp.WithResMock(func(res withttp.Response) {
+			withttp.WithMockedRes(func(res withttp.Response) {
 				res.SetBody(io.NopCloser(bytes.NewReader(mockResponse)))
 				res.SetStatus(http.StatusOK)
 			}),

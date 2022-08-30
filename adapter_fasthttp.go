@@ -43,31 +43,49 @@ func (a *fastHttpReqAdapter) SetMethod(method string) {
 func (a *fastHttpReqAdapter) SetURL(u *url.URL) {
 	uri := a.req.URI()
 	uri.SetScheme(u.Scheme)
-	uri.SetUsername(u.User.Username())
 	uri.SetHost(u.Host)
 	uri.SetPath(u.Path)
 	uri.SetQueryString(u.RawQuery)
 	uri.SetHash(string(uri.Hash()))
+
+	username := u.User.Username()
+	if StrIsset(username) {
+		uri.SetUsername(username)
+	}
+
 	if pass, ok := u.User.Password(); ok {
 		uri.SetPassword(pass)
 	}
 }
 
-func (a *fastHttpReqAdapter) SetBody(body io.ReadCloser) {
-	a.req.SetBodyStream(body, 0)
+func (a *fastHttpReqAdapter) SetBodyStream(body io.ReadCloser, bodySize int) {
+	// TODO: Caveat. Content type may be unknown at the time of setting streams.
+	a.req.SetBodyStream(body, bodySize)
+}
+
+func (a *fastHttpReqAdapter) SetBody(body []byte) {
+	a.req.SetBody(body)
 }
 
 func (a *fastHttpReqAdapter) URL() *url.URL {
 	uri := a.req.URI()
-	return &url.URL{
+
+	var user *url.Userinfo
+	if BtsIsset(uri.Username()) {
+		user = url.UserPassword(string(uri.Username()), string(uri.Password()))
+	}
+
+	u := &url.URL{
 		Scheme:   string(uri.Scheme()),
-		User:     url.UserPassword(string(uri.Username()), string(uri.Password())),
+		User:     user,
 		Host:     string(uri.Host()),
 		Path:     string(uri.Path()),
 		RawPath:  string(uri.Path()),
 		RawQuery: string(uri.QueryString()),
 		Fragment: string(uri.Hash()),
 	}
+
+	return u
 }
 
 func adaptReqFastHttp(req *fasthttp.Request) Request {
