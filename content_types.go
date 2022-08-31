@@ -3,7 +3,6 @@ package withttp
 import (
 	"github.com/pkg/errors"
 	"github.com/sonirico/withttp/codec"
-	"strings"
 )
 
 type (
@@ -11,7 +10,8 @@ type (
 )
 
 var (
-	ContentTypeJSON = "application/json"
+	ContentTypeJSON        ContentType = "application/json"
+	ContentTypeJSONEachRow ContentType = "application/jsoneachrow"
 )
 
 var (
@@ -22,17 +22,12 @@ func (c ContentType) String() string {
 	return string(c)
 }
 
-func (c ContentType) IsJSON() bool {
-	lower := strings.ToLower(strings.TrimSpace(c.String()))
-	hasApp := strings.Contains(lower, "application")
-	hasJSon := strings.Contains(lower, "json")
-	return hasApp && hasJSon
-}
-
 func (c ContentType) Codec() (codec.Codec, error) {
-	switch {
-	case c.IsJSON():
+	switch c {
+	case ContentTypeJSON:
 		return codec.NativeJSONCodec, nil
+	case ContentTypeJSONEachRow:
+		return codec.NativeJSONEachRowCodec, nil
 	default:
 		return nil, errors.Wrapf(ErrUnknownContentType, "got: '%s'", c.String())
 	}

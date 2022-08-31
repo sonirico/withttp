@@ -14,11 +14,11 @@ type (
 		SetURL(*url.URL)
 		// SetBodyStream sets the stream of body data belonging to a request. bodySize parameter is needed
 		// when using fasthttp implementation.
-		SetBodyStream(rc io.ReadCloser, bodySize int)
+		SetBodyStream(rc io.ReadWriteCloser, bodySize int)
 		SetBody([]byte)
 
 		Body() []byte
-		BodyStream() io.ReadCloser
+		BodyStream() io.ReadWriteCloser
 
 		URL() *url.URL
 	}

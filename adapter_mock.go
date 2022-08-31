@@ -21,7 +21,7 @@ func (a *MockHttpClientAdapter) Request() (Request, error) {
 	return adaptReqMock(req), err
 }
 
-func (a *MockHttpClientAdapter) Do(ctx context.Context, req Request) (Response, error) {
+func (a *MockHttpClientAdapter) Do(_ context.Context, _ Request) (Response, error) {
 	return adaptResMock(&http.Response{}), nil
 }
 

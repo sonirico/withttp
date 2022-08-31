@@ -10,6 +10,8 @@ import (
 
 type (
 	nativeReqAdapter struct {
+		body io.ReadWriteCloser
+
 		req *http.Request
 	}
 
@@ -38,13 +40,15 @@ func (a *nativeReqAdapter) SetURL(u *url.URL) {
 	a.req.URL = u
 }
 
-func (a *nativeReqAdapter) SetBodyStream(body io.ReadCloser, _ int) {
+func (a *nativeReqAdapter) SetBodyStream(body io.ReadWriteCloser, _ int) {
+	a.body = body
 	a.req.Body = body
 }
 
 func (a *nativeReqAdapter) SetBody(payload []byte) {
 	// TODO: pool these readers
-	a.req.Body = io.NopCloser(bytes.NewReader(payload))
+	a.body = closableReaderWriter{ReadWriter: bytes.NewBuffer(payload)}
+	a.req.Body = a.body
 }
 
 func (a *nativeReqAdapter) Body() []byte {
@@ -52,8 +56,8 @@ func (a *nativeReqAdapter) Body() []byte {
 	return bts
 }
 
-func (a *nativeReqAdapter) BodyStream() io.ReadCloser {
-	return a.req.Body
+func (a *nativeReqAdapter) BodyStream() io.ReadWriteCloser {
+	return a.body
 }
 
 func (a *nativeReqAdapter) URL() *url.URL {
