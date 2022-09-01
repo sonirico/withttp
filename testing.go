@@ -1,9 +1,10 @@
 package withttp
 
 import (
-	"github.com/pkg/errors"
 	"strings"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 func assertError(t *testing.T, expected, actual error) bool {

@@ -3,10 +3,11 @@ package withttp
 import (
 	"bytes"
 	"context"
-	"github.com/valyala/fasthttp"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/valyala/fasthttp"
 )
 
 type (
@@ -69,8 +70,9 @@ func (a *fastHttpReqAdapter) SetBody(body []byte) {
 	a.req.SetBody(body)
 }
 
-func (a *fastHttpReqAdapter) Body() []byte {
-	return a.req.Body()
+func (a *fastHttpReqAdapter) Body() (bts []byte) {
+	bts, _ = io.ReadAll(a.stream)
+	return
 }
 
 func (a *fastHttpReqAdapter) BodyStream() io.ReadWriteCloser {

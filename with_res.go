@@ -2,8 +2,9 @@ package withttp
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io"
+
+	"github.com/pkg/errors"
 )
 
 func WithCloseBody[T any]() CallResOptionFunc[T] {

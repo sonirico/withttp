@@ -36,7 +36,9 @@ type (
 		ReqBodyRaw     []byte
 		ReqIsStream    bool
 
-		ReqStreamWriter func(ctx context.Context, c *Call[T], res Request, wg *sync.WaitGroup) error
+		ReqStreamWriter  func(ctx context.Context, c *Call[T], res Request, wg *sync.WaitGroup) error
+		ReqStreamSniffer func([]byte, error)
+		ReqShouldSniff   bool
 	}
 )
 
