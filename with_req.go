@@ -3,10 +3,11 @@ package withttp
 import (
 	"bytes"
 	"context"
-	"github.com/sonirico/withttp/codec"
 	"io"
 	"net/url"
 	"sync"
+
+	"github.com/sonirico/withttp/codec"
 )
 
 func WithHeader[T any](k, v string, override bool) CallReqOptionFunc[T] {
@@ -83,6 +84,14 @@ func WithBody[T any](payload any) CallReqOptionFunc[T] {
 	}
 }
 
+func WithRequestSniffer[T any](fn func([]byte, error)) CallReqOptionFunc[T] {
+	return func(c *Call[T], req Request) error {
+		c.ReqShouldSniff = true
+		c.ReqStreamSniffer = fn
+		return nil
+	}
+}
+
 func WithRequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) error {
 		c.ReqIsStream = true
@@ -93,13 +102,28 @@ func WithRequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] 
 		c.ReqStreamWriter = func(ctx context.Context, c *Call[T], req Request, wg *sync.WaitGroup) (err error) {
 			defer func() { wg.Done() }()
 
-			encoder, err := c.ReqContentType.Codec()
-			if err != nil {
-				return err
+			var encoder codec.Encoder
+			if r.Serialize() {
+				encoder, err = c.ReqContentType.Codec()
+
+				if err != nil {
+					return
+				}
+			} else {
+				encoder = codec.ProxyBytesEncoder
 			}
 
-			err = EncodeStream(ctx, r, req, encoder)
-			return nil
+			var sniffer func([]byte, error)
+
+			if c.ReqShouldSniff {
+				sniffer = c.ReqStreamSniffer
+			} else {
+				sniffer = func(_ []byte, _ error) {}
+			}
+
+			err = EncodeStream(ctx, r, req, encoder, sniffer)
+
+			return
 		}
 		return nil
 	}
@@ -121,7 +145,14 @@ func EncodeBody(payload any, contentType ContentType) (bts []byte, err error) {
 	return
 }
 
-func EncodeStream[T any](ctx context.Context, r rangeable[T], req Request, encoder codec.Encoder) (err error) {
+func EncodeStream[T any](
+	ctx context.Context,
+	r rangeable[T],
+	req Request,
+	encoder codec.Encoder,
+	sniffer func([]byte, error),
+) (err error) {
+
 	stream := req.BodyStream()
 
 	defer func() { _ = stream.Close() }()
@@ -129,6 +160,10 @@ func EncodeStream[T any](ctx context.Context, r rangeable[T], req Request, encod
 	var bts []byte
 
 	r.Range(func(i int, x T) bool {
+		defer func() {
+			sniffer(bts, err)
+		}()
+
 		select {
 		case <-ctx.Done():
 			return false

@@ -48,9 +48,12 @@ build:
 .PHONY: format
 format:
 	$(info: Make: Format)
-	gofmt -w ./**/*
-	goimports -w ./**/*
-	golines -w ./**/*
+	gofmt -w ./**/*.go
+	gofmt -w ./*.go
+	goimports -w ./**/*.go
+	goimports -w ./*.go
+	golines -w ./**/*.go
+	golines -w ./*.go
 
 .PHONY: lint
 lint:

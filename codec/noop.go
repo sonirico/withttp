@@ -13,4 +13,9 @@ type (
 		Encoder
 		Decoder
 	}
+
+	NoopCodec struct{}
 )
+
+func (c NoopCodec) Encode(_ any) (bts []byte, err error) { return }
+func (c NoopCodec) Decode(_ []byte, _ any) (err error)   { return }

@@ -38,20 +38,8 @@ func (c *Call[T]) WithMethod(method string) *Call[T] {
 	return c.withReq(WithMethod[T](method))
 }
 
-type (
-	rangeable[T any] interface {
-		Range(func(int, T) bool)
-	}
-
-	Slice[T any] []T
-)
-
-func (s Slice[T]) Range(fn func(int, T) bool) {
-	for i, x := range s {
-		if !fn(i, x) {
-			return
-		}
-	}
+func (c *Call[T]) WithRequestSniffed(fn func([]byte, error)) *Call[T] {
+	return c.withReq(WithRequestSniffer[T](fn))
 }
 
 func (c *Call[T]) WithRequestStreamBody(opt StreamCallReqOptionFunc[T]) *Call[T] {
