@@ -22,7 +22,7 @@ type GithubRepoInfo struct {
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
 
-  call := withttp.NewCall[GithubRepoInfo](withttp.NewDefaultFastHttpHttpClientAdapter()).
+  call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
     WithURL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
     WithMethod(http.MethodGet).
     WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
@@ -69,7 +69,7 @@ func CreateStream() error {
       withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
     )
 
-  call := withttp.NewCall[any](withttp.NewDefaultFastHttpHttpClientAdapter()).
+  call := withttp.NewCall[any](withttp.WithFasthttp()).
     WithMethod(http.MethodPost).
     WithContentType(withttp.ContentTypeJSONEachRow).
     WithRequestSniffed(func(data []byte, err error) {
@@ -113,7 +113,7 @@ func CreateStreamChannel() error {
       withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
     )
 
-  call := withttp.NewCall[any](withttp.NewDefaultFastHttpHttpClientAdapter()).
+  call := withttp.NewCall[any](withttp.WithFasthttp()).
     WithMethod(http.MethodPost).
     WithContentType(withttp.ContentTypeJSONEachRow).
     WithRequestSniffed(func(data []byte, err error) {
@@ -150,7 +150,7 @@ func CreateStreamReader() error {
       withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
     )
 
-  call := withttp.NewCall[any](withttp.NewDefaultNativeHttpClientAdapter()).
+  call := withttp.NewCall[any](withttp.WithNetHttp()).
     WithMethod(http.MethodPost).
     WithRequestSniffed(func(data []byte, err error) {
       fmt.Printf("recv: '%s', err: %v", string(data), err)
@@ -182,7 +182,7 @@ type GithubRepoInfo struct {
 }
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
-  call := withttp.NewCall[GithubRepoInfo](withttp.NewDefaultFastHttpHttpClientAdapter()).
+  call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
     WithURI(fmt.Sprintf("repos/%s/%s", user, repo)).
     WithMethod(http.MethodGet).
     WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
@@ -219,7 +219,7 @@ func CreateRepoIssue(user, repo, title, body, assignee string) (GithubCreateIssu
   }
 
   call := withttp.NewCall[GithubCreateIssueResponse](
-    withttp.NewDefaultFastHttpHttpClientAdapter(),
+    withttp.WithFasthttp(),
   ).
     WithURI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
     WithMethod(http.MethodPost).
@@ -279,7 +279,7 @@ func main() {
 
   res := make(chan Order)
 
-  call := withttp.NewCall[Order](withttp.NewDefaultFastHttpHttpClientAdapter()).
+  call := withttp.NewCall[Order](withttp.WithFasthttp()).
     WithURL("https://github.com/").
     WithMethod(http.MethodGet).
     WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
@@ -300,6 +300,12 @@ func main() {
 }
 ```
 
-### Caveats:
+### TODO:
 
-- Fasthttp request streams are not supported as of now.
+- Form-data content type codecs
+- More quality-of-life methods for auth
+- Able to parse more content types:
+  - csv
+  - tabular separated
+  - xml
+  - gRPC
