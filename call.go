@@ -102,48 +102,14 @@ func (c *Call[T]) configureReq(req Request) error {
 }
 
 func (c *Call[T]) Call(ctx context.Context) (err error) {
-	req, err := c.client.Request()
-	defer func() { c.Req = req }()
-
-	if err != nil {
-		return
-	}
-
-	if err = c.configureReq(req); err != nil {
-		return
-	}
-
-	var wg *sync.WaitGroup
-
-	if c.ReqIsStream {
-		wg = &sync.WaitGroup{}
-		wg.Add(1)
-
-		go func() {
-			_ = c.ReqStreamWriter(ctx, c, req, wg)
-		}()
-	}
-
-	res, err := c.client.Do(ctx, req)
-
-	if c.ReqIsStream {
-		wg.Wait()
-	}
-
-	if err != nil {
-		return
-	}
-
-	defer func() { c.Res = res }()
-
-	if err = c.parseRes(res); err != nil {
-		return
-	}
-
-	return
+	return c.callEndpoint(ctx, nil)
 }
 
 func (c *Call[T]) CallEndpoint(ctx context.Context, e *Endpoint) (err error) {
+	return c.callEndpoint(ctx, e)
+}
+
+func (c *Call[T]) callEndpoint(ctx context.Context, e *Endpoint) (err error) {
 	req, err := c.client.Request()
 	defer func() { c.Req = req }()
 
@@ -151,9 +117,11 @@ func (c *Call[T]) CallEndpoint(ctx context.Context, e *Endpoint) (err error) {
 		return
 	}
 
-	for _, opt := range e.requestOpts {
-		if err = opt.Configure(req); err != nil {
-			return err
+	if e != nil {
+		for _, opt := range e.requestOpts {
+			if err = opt.Configure(req); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -184,9 +152,11 @@ func (c *Call[T]) CallEndpoint(ctx context.Context, e *Endpoint) (err error) {
 
 	defer func() { c.Res = res }()
 
-	for _, opt := range e.responseOpts {
-		if err = opt.Parse(res); err != nil {
-			return
+	if e != nil {
+		for _, opt := range e.responseOpts {
+			if err = opt.Parse(res); err != nil {
+				return
+			}
 		}
 	}
 
