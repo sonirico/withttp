@@ -116,11 +116,15 @@ func (a *FastHttpHttpClientAdapter) Do(_ context.Context, req Request) (Response
 	return adaptResFastHttp(res), err
 }
 
-func NewDefaultFastHttpHttpClientAdapter() *FastHttpHttpClientAdapter {
-	return NewFastHttpHttpClientAdapter(fastClient)
+func WithFasthttp() *FastHttpHttpClientAdapter {
+	return newFastHttpHttpClientAdapter(fastClient)
 }
 
-func NewFastHttpHttpClientAdapter(cli *fasthttp.Client) *FastHttpHttpClientAdapter {
+func WithFasthttpClient(cli *fasthttp.Client) *FastHttpHttpClientAdapter {
+	return newFastHttpHttpClientAdapter(cli)
+}
+
+func newFastHttpHttpClientAdapter(cli *fasthttp.Client) *FastHttpHttpClientAdapter {
 	return &FastHttpHttpClientAdapter{cli: cli}
 }
 

@@ -34,7 +34,7 @@ func CreateStream() error {
 			withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
 		)
 
-	call := withttp.NewCall[any](withttp.NewDefaultFastHttpHttpClientAdapter()).
+	call := withttp.NewCall[any](withttp.WithFasthttp()).
 		WithMethod(http.MethodPost).
 		WithContentType(withttp.ContentTypeJSONEachRow).
 		WithRequestSniffed(func(data []byte, err error) {
@@ -72,7 +72,7 @@ func CreateStreamChannel() error {
 			withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
 		)
 
-	call := withttp.NewCall[any](withttp.NewDefaultFastHttpHttpClientAdapter()).
+	call := withttp.NewCall[any](withttp.WithFasthttp()).
 		WithMethod(http.MethodPost).
 		WithContentType(withttp.ContentTypeJSONEachRow).
 		WithRequestSniffed(func(data []byte, err error) {
@@ -103,7 +103,7 @@ func CreateStreamReader() error {
 			withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
 		)
 
-	call := withttp.NewCall[any](withttp.NewDefaultNativeHttpClientAdapter()).
+	call := withttp.NewCall[any](withttp.WithNetHttp()).
 		WithMethod(http.MethodPost).
 		WithRequestSniffed(func(data []byte, err error) {
 			fmt.Printf("recv: '%s', err: %v", string(data), err)

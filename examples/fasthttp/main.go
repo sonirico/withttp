@@ -21,7 +21,7 @@ type GithubRepoInfo struct {
 }
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
-	call := withttp.NewCall[GithubRepoInfo](withttp.NewDefaultFastHttpHttpClientAdapter()).
+	call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
 		WithURI(fmt.Sprintf("repos/%s/%s", user, repo)).
 		WithMethod(http.MethodGet).
 		WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
@@ -58,7 +58,7 @@ func CreateRepoIssue(user, repo, title, body, assignee string) (GithubCreateIssu
 	}
 
 	call := withttp.NewCall[GithubCreateIssueResponse](
-		withttp.NewDefaultFastHttpHttpClientAdapter(),
+		withttp.WithFasthttp(),
 	).
 		WithURI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
 		WithMethod(http.MethodPost).

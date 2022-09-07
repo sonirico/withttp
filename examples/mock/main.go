@@ -34,7 +34,7 @@ func main() {
 
 	res := make(chan Order)
 
-	call := withttp.NewCall[Order](withttp.NewDefaultFastHttpHttpClientAdapter()).
+	call := withttp.NewCall[Order](withttp.WithFasthttp()).
 		WithURL("https://github.com/").
 		WithMethod(http.MethodGet).
 		WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
