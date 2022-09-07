@@ -3,9 +3,13 @@ package withttp
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"net/url"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/sonirico/withttp/codec"
 )
@@ -13,6 +17,16 @@ import (
 func WithHeader[T any](k, v string, override bool) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) error {
 		return ConfigureHeader(req, k, v, override)
+	}
+}
+
+func WithBasicAuth[T any](user, pass string) CallReqOptionFunc[T] {
+	return func(_ *Call[T], req Request) error {
+		header, err := CreateAuthorizationHeader(authHeaderKindBasic, user, pass)
+		if err != nil {
+			return err
+		}
+		return ConfigureHeader(req, "authorization", header, true)
 	}
 }
 
@@ -28,6 +42,38 @@ func WithContentType[T any](ct ContentType) CallReqOptionFunc[T] {
 		c.ReqContentType = ct
 		return ConfigureHeader(req, "content-type", ct.String(), true)
 	}
+}
+
+type authHeaderKind string
+
+var (
+	authHeaderKindBasic authHeaderKind = "Basic"
+)
+
+func (a authHeaderKind) Codec() func(...string) (string, error) {
+	switch a {
+	case authHeaderKindBasic:
+		return func(s ...string) (string, error) {
+			if len(s) < 2 {
+				return "", errors.Wrapf(ErrAssertion, "header kind: %s", a)
+			}
+			user := s[0]
+			pass := s[1]
+
+			return base64.StdEncoding.EncodeToString(S2B(user + ":" + pass)), nil
+		}
+	default:
+		panic("unknown auth header kind")
+	}
+}
+
+func CreateAuthorizationHeader(kind authHeaderKind, user, pass string) (string, error) {
+	fn := kind.Codec()
+	header, err := fn(user, pass)
+	if err != nil {
+		return header, err
+	}
+	return fmt.Sprintf("%s %s", kind, header), nil
 }
 
 func ConfigureHeader(req Request, key, value string, override bool) error {

@@ -32,6 +32,11 @@ func (a *nativeReqAdapter) SetHeader(key, value string) {
 	a.req.Header.Set(key, value)
 }
 
+func (a *nativeReqAdapter) GetHeader(key string) (string, bool) {
+	s := a.req.Header.Get(key)
+	return s, len(s) > 0
+}
+
 func (a *nativeReqAdapter) SetMethod(method string) {
 	a.req.Method = method
 }
@@ -111,4 +116,17 @@ func (a *nativeResAdapter) StatusText() string {
 
 func (a *nativeResAdapter) Body() io.ReadCloser {
 	return a.res.Body
+}
+
+func (a *nativeResAdapter) AddHeader(key, value string) {
+	a.res.Header.Add(key, value)
+}
+
+func (a *nativeResAdapter) SetHeader(key, value string) {
+	a.res.Header.Set(key, value)
+}
+
+func (a *nativeResAdapter) GetHeader(key string) (string, bool) {
+	s := a.res.Header.Get(key)
+	return s, len(s) > 0
 }

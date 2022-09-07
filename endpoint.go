@@ -7,10 +7,16 @@ import (
 )
 
 type (
-	Request interface {
-		SetMethod(string)
+	Header interface {
 		SetHeader(k, v string)
 		AddHeader(k, v string)
+		GetHeader(k string) (string, bool)
+	}
+
+	Request interface {
+		Header
+
+		SetMethod(string)
 		SetURL(*url.URL)
 		// SetBodyStream sets the stream of body data belonging to a request. bodySize parameter is needed
 		// when using fasthttp implementation.
@@ -24,6 +30,8 @@ type (
 	}
 
 	Response interface {
+		Header
+
 		Status() int
 		StatusText() string
 		Body() io.ReadCloser
