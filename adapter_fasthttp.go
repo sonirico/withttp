@@ -39,6 +39,16 @@ func (a *fastHttpReqAdapter) SetHeader(key, value string) {
 	a.req.Header.Set(key, value)
 }
 
+func (a *fastHttpReqAdapter) GetHeader(key string) (string, bool) {
+	data := a.req.Header.Peek(key)
+	if data == nil || len(data) == 0 {
+		return "", false
+	}
+	bts := make([]byte, len(data))
+	copy(bts, data)
+	return string(bts), true
+}
+
 func (a *fastHttpReqAdapter) SetMethod(method string) {
 	a.req.Header.SetMethod(method)
 }
@@ -150,4 +160,22 @@ func (a *fastHttpResAdapter) StatusText() string {
 
 func (a *fastHttpResAdapter) Body() io.ReadCloser {
 	return io.NopCloser(bytes.NewReader(a.res.Body()))
+}
+
+func (a *fastHttpResAdapter) AddHeader(key, value string) {
+	a.res.Header.Add(key, value)
+}
+
+func (a *fastHttpResAdapter) SetHeader(key, value string) {
+	a.res.Header.Set(key, value)
+}
+
+func (a *fastHttpResAdapter) GetHeader(key string) (string, bool) {
+	data := a.res.Header.Peek(key)
+	if data == nil || len(data) == 0 {
+		return "", false
+	}
+	bts := make([]byte, len(data))
+	copy(bts, data)
+	return string(bts), true
 }

@@ -37,6 +37,7 @@ func main() {
 	call := withttp.NewCall[Order](withttp.WithFasthttp()).
 		WithURL("https://github.com/").
 		WithMethod(http.MethodGet).
+		WithBasicAuth("pepito", "secret").
 		WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
 		WithHeaderFunc(func() (key, value string, override bool) {
 			key = "X-Date"
@@ -58,4 +59,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Println(call.Req.GetHeader("Authorization"))
 }

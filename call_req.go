@@ -72,6 +72,10 @@ func (c *Call[T]) WithHeaderFunc(fn func() (key, value string, override bool)) *
 	return c.withReq(WithHeaderFunc[T](fn))
 }
 
+func (c *Call[T]) WithBasicAuth(user, pass string) *Call[T] {
+	return c.withReq(WithBasicAuth[T](user, pass))
+}
+
 func (c *Call[T]) WithContentType(ct ContentType) *Call[T] {
 	return c.withReq(WithContentType[T](ct))
 }
