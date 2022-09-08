@@ -10,7 +10,8 @@ Supported underlying http implementations are:
 
  - [net/http](https://pkg.go.dev/net/http)
  - [fasthttp](https://pkg.go.dev/github.com/valyala/fasthttp)
- - open an issue to include your preferred one!
+ - Wrap your client with [Client interface](https://github.com/sonirico/withttp/blob/main/endpoint.go#L43) ...
+ - ... or open an issue to include your preferred one!
 
 #### Query Restful endpoints
 
