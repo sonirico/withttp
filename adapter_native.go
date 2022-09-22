@@ -54,6 +54,7 @@ func (a *nativeReqAdapter) SetBody(payload []byte) {
 	// TODO: pool these readers
 	a.body = closableReaderWriter{ReadWriter: bytes.NewBuffer(payload)}
 	a.req.Body = a.body
+	a.req.ContentLength = int64(len(payload))
 }
 
 func (a *nativeReqAdapter) Body() []byte {
