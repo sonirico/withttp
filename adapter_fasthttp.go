@@ -78,6 +78,7 @@ func (a *fastHttpReqAdapter) SetBodyStream(body io.ReadWriteCloser, bodySize int
 
 func (a *fastHttpReqAdapter) SetBody(body []byte) {
 	a.req.SetBody(body)
+	a.req.Header.SetContentLength(len(body))
 }
 
 func (a *fastHttpReqAdapter) Body() (bts []byte) {
