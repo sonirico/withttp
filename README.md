@@ -260,9 +260,9 @@ Quickly test your calls by creating a mock endpoint
 ```go
 var (
   exchangeListOrders = withttp.NewEndpoint("ListOrders").
-        Request(withttp.WithURL("http://example.com")).
+        Request(withttp.WithBaseURL("http://example.com")).
         Response(
-      withttp.WithResMock(func(res withttp.Response) {
+      withttp.WithMockedRes(func(res withttp.Response) {
         res.SetBody(io.NopCloser(bytes.NewReader(mockResponse)))
         res.SetStatus(http.StatusOK)
       }),
@@ -284,7 +284,7 @@ func main() {
     WithURL("https://github.com/").
     WithMethod(http.MethodGet).
     WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
-    WithJSONEachRowChan(res).
+    WithParseJSONEachRowChan(res).
     WithExpectedStatusCodes(http.StatusOK)
 
   go func() {
@@ -293,7 +293,7 @@ func main() {
     }
   }()
 
-  err := call.Call(context.Background(), exchangeListOrders)
+  err := call.CallEndpoint(context.Background(), exchangeListOrders)
 
   if err != nil {
     panic(err)
@@ -306,7 +306,6 @@ func main() {
 - Form-data content type codecs
 - More quality-of-life methods for auth
 - Able to parse more content types:
-  - csv
   - tabular separated
   - xml
   - gRPC

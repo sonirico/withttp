@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+
+	"github.com/sonirico/withttp/csvparser"
 )
 
 type (
@@ -32,6 +34,21 @@ type (
 		inner Stream[[]byte]
 
 		err error
+	}
+
+	CSVStream[T any] struct {
+		current T
+
+		inner Stream[[]byte]
+
+		err error
+
+		parser csvparser.Parser[T]
+
+		ignoreLines int
+		ignoreErr   bool
+
+		rowCount int
 	}
 
 	NewLineStream struct {
@@ -116,6 +133,47 @@ func (s *JSONEachRowStream[T]) Err() error {
 	return s.inner.Err()
 }
 
+func (s *CSVStream[T]) next(ctx context.Context, shouldParse bool) bool {
+	if !s.inner.Next(ctx) {
+		return false
+	}
+
+	if !shouldParse {
+		return true
+	}
+
+	var zeroed T // TODO: json too?
+	line := s.inner.Data()
+	s.current = zeroed
+	s.err = s.parser.Parse(line, &s.current)
+
+	if s.err == nil || s.ignoreErr {
+		s.rowCount++
+	}
+
+	return true
+}
+
+func (s *CSVStream[T]) Next(ctx context.Context) bool {
+	for s.ignoreLines > 0 {
+		_ = s.next(ctx, false)
+		s.ignoreLines--
+	}
+	return s.next(ctx, true)
+}
+
+func (s *CSVStream[T]) Data() T {
+	return s.current
+}
+
+func (s *CSVStream[T]) Err() error {
+	if s.err != nil {
+		return s.err
+	}
+
+	return s.inner.Err()
+}
+
 func NewNewLineStream(r io.Reader) Stream[[]byte] {
 	return &NewLineStream{scanner: bufio.NewScanner(r)}
 }
@@ -142,8 +200,23 @@ func NewJSONEachRowStream[T any](r io.Reader) Stream[T] {
 	}
 }
 
+func NewCSVStream[T any](r io.Reader, ignoreLines int, parser csvparser.Parser[T]) Stream[T] {
+	return &CSVStream[T]{
+		inner:       NewNewLineStream(r),
+		parser:      parser,
+		ignoreLines: ignoreLines,
+		ignoreErr:   false,
+	}
+}
+
 func NewJSONEachRowStreamFactory[T any]() StreamFactory[T] {
 	return StreamFactoryFunc[T](func(r io.Reader) Stream[T] {
 		return NewJSONEachRowStream[T](r)
+	})
+}
+
+func NewCSVStreamFactory[T any](ignoreLines int, parser csvparser.Parser[T]) StreamFactory[T] {
+	return StreamFactoryFunc[T](func(r io.Reader) Stream[T] {
+		return NewCSVStream[T](r, ignoreLines, parser)
 	})
 }
