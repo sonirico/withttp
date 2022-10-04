@@ -1,5 +1,7 @@
 package withttp
 
+import "github.com/sonirico/withttp/csvparser"
+
 func (c *Call[T]) Response(opts ...ResOption) *Call[T] {
 	c.resOptions = append(c.resOptions, opts...)
 	return c
@@ -23,6 +25,14 @@ func (c *Call[T]) WithParseJSONEachRowChan(out chan<- T) *Call[T] {
 
 func (c *Call[T]) WithParseJSONEachRow(fn func(T) bool) *Call[T] {
 	return c.WithParseStream(NewJSONEachRowStreamFactory[T](), fn)
+}
+
+func (c *Call[T]) WithParseCSV(
+	ignoreLines int,
+	parser csvparser.Parser[T],
+	fn func(T) bool,
+) *Call[T] {
+	return c.WithParseStream(NewCSVStreamFactory[T](ignoreLines, parser), fn)
 }
 
 func (c *Call[T]) WithIgnoreResponseBody() *Call[T] {
