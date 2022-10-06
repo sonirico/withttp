@@ -1,12 +1,15 @@
 package csvparser
 
 import (
-	"github.com/pkg/errors"
-	"github.com/sonirico/stadio/slices"
+	"bytes"
 )
 
 var (
 	quote = []byte{byte('"')}
+
+	QuoteDouble byte = '"'
+	QuoteSimple byte = '\''
+	QuoteNone   byte = 0
 
 	SeparatorComma     byte = ','
 	SeparatorSemicolon byte = ';'
@@ -21,45 +24,41 @@ type (
 )
 
 func (p Parser[T]) Parse(data []byte, item *T) (err error) {
-	counter := 0
-	for _, col := range p.columns {
-		pos := slices.IndexOf[byte](
-			data,
-			func(x byte) bool {
-				return x == p.separator
-			},
-		)
+	data = bytes.TrimSpace(data) // cleanup phase
+	sepLen := 1                  // len(p.separator)
 
-		lastCol := counter == len(p.columns)-1
-
-		if pos == -1 && !lastCol {
-			// Only if no more separators have been found, and current column is not the last one, yield error
-			err = errors.Wrapf(
-				ErrColumnMismatch,
-				"want %d, have %d",
-				len(p.columns),
-				counter,
-			)
+	for i, col := range p.columns {
+		var read int
+		read, err = col.Parse(data, item)
+		if err != nil {
+			return
 		}
 
-		payload := data
-		if !lastCol {
-			payload = data[:pos]
+		// TODO: handle read =0
+		_ = i
+
+		if read > len(data) {
+			break
 		}
 
-		if err = col.Parse(payload, item); err != nil {
-			return err
+		// create a cursor to have better readability under the fact the column types will only parse
+		// its desired data, letting the parser have the liability to advance de cursor.
+		cursor := read
+		if read+sepLen <= len(data) {
+			cursor += sepLen
 		}
 
-		counter++
-
-		if !lastCol {
-			data = data[pos+1:]
-		}
+		data = data[cursor:]
 	}
 	return nil
 }
 
-func NewParser[T any](sep byte, cols ...Col[T]) Parser[T] {
-	return Parser[T]{separator: sep, columns: cols}
+func New[T any](sep byte, cols ...ColFactory[T]) Parser[T] {
+	columns := make([]Col[T], len(cols))
+	opt := opts{sep: sep}
+
+	for i, c := range cols {
+		columns[i] = c(opt)
+	}
+	return Parser[T]{separator: sep, columns: columns}
 }

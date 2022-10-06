@@ -2,9 +2,15 @@ package csvparser
 
 type (
 	Col[T any] interface {
-		Parse(data []byte, item *T) error
+		Parse(data []byte, item *T) (int, error)
 		//Compile(x T, writer io.Writer) error
 	}
+
+	opts struct {
+		sep byte
+	}
+
+	ColFactory[T any] func(opts) Col[T]
 
 	StringColumn[T any] struct {
 		inner  StringType
@@ -25,42 +31,46 @@ type (
 	}
 )
 
-func (s StringColumn[T]) Parse(data []byte, item *T) error {
-	val, err := s.inner.Parse(data)
+func (s StringColumn[T]) Parse(data []byte, item *T) (int, error) {
+	val, n, err := s.inner.Parse(data)
 	if err != nil {
-		return err
+		return n, err
 	}
 	s.setter(item, val)
-	return nil
+	return n, nil
 }
 
-func (c IntColumn[T]) Parse(data []byte, item *T) error {
-	val, err := c.inner.Parse(data)
+func (c IntColumn[T]) Parse(data []byte, item *T) (int, error) {
+	val, n, err := c.inner.Parse(data)
 	if err != nil {
-		return err
+		return n, err
 	}
 	c.setter(item, val)
-	return nil
+	return n, nil
 }
 
 func StringCol[T any](
-	quoted bool,
+	quote byte,
 	getter func(T) string,
 	setter func(*T, string),
-) Col[T] {
-	return StringColumn[T]{
-		inner:  StrType(quoted),
-		getter: getter, setter: setter,
+) ColFactory[T] {
+	return func(opts opts) Col[T] {
+		return StringColumn[T]{
+			inner:  StrType(quote, opts.sep),
+			getter: getter, setter: setter,
+		}
 	}
 }
 
 func IntCol[T any](
-	quoted bool,
+	quote byte,
 	getter func(T) int,
 	setter func(*T, int),
-) Col[T] {
-	return IntColumn[T]{
-		inner:  IntType(quoted),
-		getter: getter, setter: setter,
+) ColFactory[T] {
+	return func(opts opts) Col[T] {
+		return IntColumn[T]{
+			inner:  IntType(quote, opts.sep),
+			getter: getter, setter: setter,
+		}
 	}
 }
