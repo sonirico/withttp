@@ -36,20 +36,20 @@ func parseCSVResponse() {
 
 	ignoreLines := 1 // in order to ignore header
 
-	parser := csvparser.NewParser[Repo](
+	parser := csvparser.New[Repo](
 		csvparser.SeparatorComma,
 		csvparser.IntCol[Repo](
-			false,
+			csvparser.QuoteNone,
 			nil,
 			func(x *Repo, rank int) { x.Rank = rank },
 		),
 		csvparser.StringCol[Repo](
-			false,
+			csvparser.QuoteNone,
 			nil,
 			func(x *Repo, name string) { x.Name = name },
 		),
 		csvparser.IntCol[Repo](
-			false,
+			csvparser.QuoteNone,
 			nil,
 			func(x *Repo, stars int) { x.Stars = stars },
 		),
