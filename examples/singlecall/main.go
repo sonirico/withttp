@@ -19,15 +19,17 @@ type GithubRepoInfo struct {
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
 	l := zerolog.New(os.Stdout)
 
-	call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
+	call := withttp.NewCall[GithubRepoInfo](withttp.WithNetHttp()).
 		WithURL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
 		WithLogger(&l).
 		WithMethod(http.MethodGet).
-		WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
+		WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
 		WithParseJSON().
 		WithExpectedStatusCodes(http.StatusOK)
 
 	err := call.Call(context.Background())
+
+	call.Log(os.Stderr)
 
 	return call.BodyParsed, err
 }

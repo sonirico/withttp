@@ -26,7 +26,7 @@ func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
   call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
     WithURL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
     WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
+    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
     WithParseJSON().
     WithExpectedStatusCodes(http.StatusOK)
 
@@ -186,7 +186,7 @@ func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
   call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
     WithURI(fmt.Sprintf("repos/%s/%s", user, repo)).
     WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
+    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
     WithHeaderFunc(func() (key, value string, override bool) {
       key = "X-Date"
       value = time.Now().String()
@@ -283,7 +283,7 @@ func main() {
   call := withttp.NewCall[Order](withttp.WithFasthttp()).
     WithURL("https://github.com/").
     WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.1.0 See https://github.com/sonirico/withttp", false).
+    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
     WithParseJSONEachRowChan(res).
     WithExpectedStatusCodes(http.StatusOK)
 

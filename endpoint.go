@@ -11,6 +11,7 @@ type (
 		SetHeader(k, v string)
 		AddHeader(k, v string)
 		Header(k string) (string, bool)
+		RangeHeaders(func(string, string))
 	}
 
 	Request interface {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type (
@@ -64,6 +65,12 @@ func (a *nativeReqAdapter) SetBody(payload []byte) {
 func (a *nativeReqAdapter) Body() []byte {
 	bts, _ := io.ReadAll(a.req.Body)
 	return bts
+}
+
+func (a *nativeReqAdapter) RangeHeaders(fn func(string, string)) {
+	for k, v := range a.req.Header {
+		fn(k, strings.Join(v, ", "))
+	}
 }
 
 func (a *nativeReqAdapter) BodyStream() io.ReadWriteCloser {
@@ -134,4 +141,10 @@ func (a *nativeResAdapter) SetHeader(key, value string) {
 func (a *nativeResAdapter) Header(key string) (string, bool) {
 	s := a.res.Header.Get(key)
 	return s, len(s) > 0
+}
+
+func (a *nativeResAdapter) RangeHeaders(fn func(string, string)) {
+	for k, v := range a.res.Header {
+		fn(k, strings.Join(v, ", "))
+	}
 }

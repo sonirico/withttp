@@ -35,6 +35,12 @@ func (a *fastHttpReqAdapter) AddHeader(key, value string) {
 	a.req.Header.Add(key, value)
 }
 
+func (a *fastHttpReqAdapter) RangeHeaders(fn func(string, string)) {
+	a.req.Header.VisitAll(func(key, value []byte) {
+		fn(string(key), string(value))
+	})
+}
+
 func (a *fastHttpReqAdapter) SetHeader(key, value string) {
 	a.req.Header.Set(key, value)
 }
@@ -183,4 +189,10 @@ func (a *fastHttpResAdapter) Header(key string) (string, bool) {
 	bts := make([]byte, len(data))
 	copy(bts, data)
 	return string(bts), true
+}
+
+func (a *fastHttpResAdapter) RangeHeaders(fn func(string, string)) {
+	a.res.Header.VisitAll(func(key, value []byte) {
+		fn(string(key), string(value))
+	})
 }
