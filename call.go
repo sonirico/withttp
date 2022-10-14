@@ -21,7 +21,9 @@ type (
 	CallResOptionFunc[T any] func(c *Call[T], res Response) error
 
 	Call[T any] struct {
-		client client
+		logger logger
+
+		client Client
 
 		reqOptions []ReqOption // TODO: Linked Lists
 		resOptions []ResOption
@@ -50,7 +52,7 @@ func (f CallReqOptionFunc[T]) Configure(c *Call[T], req Request) error {
 	return f(c, req)
 }
 
-func NewCall[T any](client client) *Call[T] {
+func NewCall[T any](client Client) *Call[T] {
 	return &Call[T]{client: client}
 }
 
@@ -140,6 +142,8 @@ func (c *Call[T]) callEndpoint(ctx context.Context, e *Endpoint) (err error) {
 		}()
 	}
 
+	c.log("%s %s", req.Method(), req.URL().String())
+
 	res, err := c.client.Do(ctx, req)
 
 	if c.ReqIsStream {
@@ -165,4 +169,12 @@ func (c *Call[T]) callEndpoint(ctx context.Context, e *Endpoint) (err error) {
 	}
 
 	return
+}
+
+func (c *Call[T]) log(tpl string, args ...any) {
+	if c.logger == nil {
+		return
+	}
+
+	c.logger.Printf(tpl, args...)
 }

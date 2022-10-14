@@ -54,19 +54,13 @@ func WithParseStreamChan[T any](factory StreamFactory[T], out chan<- T) CallResO
 
 func WithExpectedStatusCodes[T any](states ...int) CallResOptionFunc[T] {
 	return WithAssertion[T](func(res Response) error {
-		found := false
 		for _, status := range states {
 			if status == res.Status() {
-				found = true
-				break
+				return nil
 			}
 		}
+		return errors.Wrapf(ErrUnexpectedStatusCode, "want: %v, have: %d", states, res.Status())
 
-		if !found {
-			return errors.Wrapf(ErrUnexpectedStatusCode, "want: %v, have: %d", states, res.Status())
-		}
-
-		return nil
 	})
 }
 

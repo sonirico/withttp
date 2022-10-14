@@ -10,13 +10,15 @@ type (
 	Header interface {
 		SetHeader(k, v string)
 		AddHeader(k, v string)
-		GetHeader(k string) (string, bool)
+		Header(k string) (string, bool)
 	}
 
 	Request interface {
 		Header
 
+		Method() string
 		SetMethod(string)
+
 		SetURL(*url.URL)
 		// SetBodyStream sets the stream of body data belonging to a request. bodySize parameter is needed
 		// when using fasthttp implementation.
@@ -40,7 +42,7 @@ type (
 		SetStatus(status int)
 	}
 
-	client interface {
+	Client interface {
 		Request() (Request, error)
 		Do(ctx context.Context, req Request) (Response, error)
 	}

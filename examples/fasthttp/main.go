@@ -85,7 +85,11 @@ func main() {
 	log.Println(info)
 
 	// Create an issue
-	res, err := CreateRepoIssue("sonirico", "withttp", "test",
-		"This is a test", "sonirico")
+	res, err := CreateRepoIssue(
+		"sonirico",
+		"withttp",
+		"test",
+		"This is a test", "sonirico",
+	)
 	log.Println(res, err)
 }
