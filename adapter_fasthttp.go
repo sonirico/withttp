@@ -35,11 +35,17 @@ func (a *fastHttpReqAdapter) AddHeader(key, value string) {
 	a.req.Header.Add(key, value)
 }
 
+func (a *fastHttpReqAdapter) RangeHeaders(fn func(string, string)) {
+	a.req.Header.VisitAll(func(key, value []byte) {
+		fn(string(key), string(value))
+	})
+}
+
 func (a *fastHttpReqAdapter) SetHeader(key, value string) {
 	a.req.Header.Set(key, value)
 }
 
-func (a *fastHttpReqAdapter) GetHeader(key string) (string, bool) {
+func (a *fastHttpReqAdapter) Header(key string) (string, bool) {
 	data := a.req.Header.Peek(key)
 	if data == nil || len(data) == 0 {
 		return "", false
@@ -47,6 +53,10 @@ func (a *fastHttpReqAdapter) GetHeader(key string) (string, bool) {
 	bts := make([]byte, len(data))
 	copy(bts, data)
 	return string(bts), true
+}
+
+func (a *fastHttpReqAdapter) Method() string {
+	return string(a.req.Header.Method())
 }
 
 func (a *fastHttpReqAdapter) SetMethod(method string) {
@@ -171,7 +181,7 @@ func (a *fastHttpResAdapter) SetHeader(key, value string) {
 	a.res.Header.Set(key, value)
 }
 
-func (a *fastHttpResAdapter) GetHeader(key string) (string, bool) {
+func (a *fastHttpResAdapter) Header(key string) (string, bool) {
 	data := a.res.Header.Peek(key)
 	if data == nil || len(data) == 0 {
 		return "", false
@@ -179,4 +189,10 @@ func (a *fastHttpResAdapter) GetHeader(key string) (string, bool) {
 	bts := make([]byte, len(data))
 	copy(bts, data)
 	return string(bts), true
+}
+
+func (a *fastHttpResAdapter) RangeHeaders(fn func(string, string)) {
+	a.res.Header.VisitAll(func(key, value []byte) {
+		fn(string(key), string(value))
+	})
 }

@@ -9,10 +9,6 @@ import (
 )
 
 type (
-	parseOpts struct {
-		sep byte
-	}
-
 	Type[T any] interface {
 		Parse(data []byte) (T, int, error)
 		//Compile(x T, writer io.Writer) error
