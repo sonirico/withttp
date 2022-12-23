@@ -142,16 +142,20 @@ func (c *Call[T]) callEndpoint(ctx context.Context, e *Endpoint) (err error) {
 		}()
 	}
 
+	c.log("[withttp] %s %s", req.Method(), req.URL().String())
+
 	res, err := c.client.Do(ctx, req)
 
 	if c.ReqIsStream {
 		wg.Wait()
 	}
 
-	c.log("%s %s returned status code %d", req.Method(), req.URL().String(), res.Status())
-
 	if err != nil {
 		return
+	}
+
+	if res != nil {
+		c.log("[withttp] server returned status code %d", res.Status())
 	}
 
 	defer func() { c.Res = res }()
