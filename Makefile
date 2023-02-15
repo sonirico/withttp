@@ -40,11 +40,6 @@ help:
 	@echo "make bench - run go test including benchmarking"
 
 
-.PHONY: build
-build:
-	$(info: Make: Build)
-	go build -gcflags='-m -m' examples/compiler/*.go
-
 .PHONY: format
 format:
 	$(info: Make: Format)

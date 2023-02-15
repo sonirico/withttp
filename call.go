@@ -112,7 +112,7 @@ func (c *Call[T]) CallEndpoint(ctx context.Context, e *Endpoint) (err error) {
 }
 
 func (c *Call[T]) callEndpoint(ctx context.Context, e *Endpoint) (err error) {
-	req, err := c.client.Request()
+	req, err := c.client.Request(ctx)
 	defer func() { c.Req = req }()
 
 	if err != nil {
