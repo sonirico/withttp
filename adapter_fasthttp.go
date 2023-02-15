@@ -125,7 +125,7 @@ func adaptReqFastHttp(req *fasthttp.Request) Request {
 	return &fastHttpReqAdapter{req: req}
 }
 
-func (a *FastHttpHttpClientAdapter) Request() (Request, error) {
+func (a *FastHttpHttpClientAdapter) Request(_ context.Context) (Request, error) {
 	req := &fasthttp.Request{}
 	req.Header.SetMethod(http.MethodGet)
 	return adaptReqFastHttp(req), nil

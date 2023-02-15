@@ -44,7 +44,7 @@ type (
 	}
 
 	Client interface {
-		Request() (Request, error)
+		Request(ctx context.Context) (Request, error)
 		Do(ctx context.Context, req Request) (Response, error)
 	}
 

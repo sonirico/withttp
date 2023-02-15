@@ -85,8 +85,8 @@ func adaptReqNative(req *http.Request) Request {
 	return &nativeReqAdapter{req: req}
 }
 
-func (a *NativeHttpClientAdapter) Request() (Request, error) {
-	req, err := http.NewRequest("GET", "", nil)
+func (a *NativeHttpClientAdapter) Request(ctx context.Context) (Request, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "", nil)
 	if err != nil {
 		return nil, err
 	}

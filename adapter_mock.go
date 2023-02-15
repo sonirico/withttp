@@ -13,7 +13,7 @@ func NewMockHttpClientAdapter() *MockHttpClientAdapter {
 	return &MockHttpClientAdapter{}
 }
 
-func (a *MockHttpClientAdapter) Request() (Request, error) {
+func (a *MockHttpClientAdapter) Request(_ context.Context) (Request, error) {
 	req, err := http.NewRequest("GET", "", nil)
 	if err != nil {
 		return nil, err

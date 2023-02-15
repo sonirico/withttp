@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/rs/zerolog"
 	"github.com/sonirico/withttp"
 )
 
@@ -17,11 +17,11 @@ type GithubRepoInfo struct {
 }
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
-	l := zerolog.New(os.Stdout)
+	log := logrus.New()
 
 	call := withttp.NewCall[GithubRepoInfo](withttp.WithNetHttp()).
 		WithURL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
-		WithLogger(&l).
+		WithLogger(log).
 		WithMethod(http.MethodGet).
 		WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
 		WithParseJSON().
