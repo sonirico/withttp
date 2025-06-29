@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	Header interface {
+	header interface {
 		SetHeader(k, v string)
 		AddHeader(k, v string)
 		Header(k string) (string, bool)
@@ -15,7 +15,7 @@ type (
 	}
 
 	Request interface {
-		Header
+		header
 
 		Method() string
 		SetMethod(string)
@@ -33,7 +33,7 @@ type (
 	}
 
 	Response interface {
-		Header
+		header
 
 		Status() int
 		StatusText() string
@@ -56,9 +56,7 @@ type (
 		responseOpts []ResOption
 	}
 
-	MockEndpoint struct {
-		inner *Endpoint
-	}
+	MockEndpoint struct{}
 
 	ReqOption interface {
 		Configure(r Request) error

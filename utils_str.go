@@ -14,5 +14,5 @@ func BtsIsset(bts []byte) bool {
 }
 
 func BytesEquals(a, b []byte) bool {
-	return bytes.Compare(bytes.TrimSpace(a), bytes.TrimSpace(b)) == 0
+	return bytes.Equal(bytes.TrimSpace(a), bytes.TrimSpace(b))
 }

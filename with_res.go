@@ -1,13 +1,16 @@
 package withttp
 
 import (
+	"context"
 	"encoding/json"
 	"io"
+
+	"github.com/sonirico/vago/slices"
 
 	"github.com/pkg/errors"
 )
 
-func WithCloseBody[T any]() CallResOptionFunc[T] {
+func CloseBody[T any]() CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		rc := c.bodyReader(res)
 		defer func() { _ = rc.Close() }()
@@ -15,7 +18,7 @@ func WithCloseBody[T any]() CallResOptionFunc[T] {
 	}
 }
 
-func WithIgnoredBody[T any]() CallResOptionFunc[T] {
+func IgnoredBody[T any]() CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		rc := c.bodyReader(res)
 		defer func() { _ = rc.Close() }()
@@ -24,7 +27,7 @@ func WithIgnoredBody[T any]() CallResOptionFunc[T] {
 	}
 }
 
-func WithParseBodyRaw[T any]() CallResOptionFunc[T] {
+func ParseBodyRaw[T any]() CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		rc := c.bodyReader(res)
 		defer func() { _ = rc.Close() }()
@@ -33,38 +36,35 @@ func WithParseBodyRaw[T any]() CallResOptionFunc[T] {
 	}
 }
 
-func WithParseJSON[T any]() CallResOptionFunc[T] {
+func ParseJSON[T any]() CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		c.BodyParsed, err = ReadJSON[T](c.bodyReader(res))
 		return
 	}
 }
 
-func WithParseStream[T any](factory StreamFactory[T], fn func(T) bool) CallResOptionFunc[T] {
+func ParseStream[T any](factory StreamFactory[T], fn func(T) bool) CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		return ReadStream[T](c.bodyReader(res), factory, fn)
 	}
 }
 
-func WithParseStreamChan[T any](factory StreamFactory[T], out chan<- T) CallResOptionFunc[T] {
+func ParseStreamChan[T any](factory StreamFactory[T], out chan<- T) CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) (err error) {
 		return ReadStreamChan(c.bodyReader(res), factory, out)
 	}
 }
 
-func WithExpectedStatusCodes[T any](states ...int) CallResOptionFunc[T] {
-	return WithAssertion[T](func(res Response) error {
-		for _, status := range states {
-			if status == res.Status() {
-				return nil
-			}
+func ExpectedStatusCodes[T any](states ...int) CallResOptionFunc[T] {
+	return Assertion[T](func(res Response) error {
+		if slices.Includes(states, res.Status()) {
+			return nil
 		}
 		return errors.Wrapf(ErrUnexpectedStatusCode, "want: %v, have: %d", states, res.Status())
-
 	})
 }
 
-func WithAssertion[T any](fn func(res Response) error) CallResOptionFunc[T] {
+func Assertion[T any](fn func(res Response) error) CallResOptionFunc[T] {
 	return func(c *Call[T], res Response) error {
 		if err := fn(res); err != nil {
 			return errors.Wrapf(ErrAssertion, err.Error())
@@ -74,7 +74,7 @@ func WithAssertion[T any](fn func(res Response) error) CallResOptionFunc[T] {
 	}
 }
 
-func WithMockedRes(fn func(response Response)) ResOption {
+func MockedRes(fn func(response Response)) ResOption {
 	return ResOptionFunc(func(res Response) (err error) {
 		fn(res)
 		return
@@ -99,7 +99,7 @@ func ReadStream[T any](rc io.ReadCloser, factory StreamFactory[T], fn func(T) bo
 	stream := factory.Get(rc)
 	keep := true
 
-	for keep && stream.Next(nil) {
+	for keep && stream.Next(context.TODO()) {
 		if err = stream.Err(); err != nil {
 			return
 		}

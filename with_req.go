@@ -14,13 +14,13 @@ import (
 	"github.com/sonirico/withttp/codec"
 )
 
-func WithHeader[T any](k, v string, override bool) CallReqOptionFunc[T] {
+func Header[T any](k, v string, override bool) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) error {
 		return ConfigureHeader(req, k, v, override)
 	}
 }
 
-func WithBasicAuth[T any](user, pass string) CallReqOptionFunc[T] {
+func BasicAuth[T any](user, pass string) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) error {
 		header, err := CreateAuthorizationHeader(authHeaderKindBasic, user, pass)
 		if err != nil {
@@ -30,17 +30,17 @@ func WithBasicAuth[T any](user, pass string) CallReqOptionFunc[T] {
 	}
 }
 
-func WithHeaderFunc[T any](fn func() (string, string, bool)) CallReqOptionFunc[T] {
+func HeaderFunc[T any](fn func() (string, string, bool)) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) error {
 		k, v, override := fn()
 		return ConfigureHeader(req, k, v, override)
 	}
 }
 
-func WithContentType[T any](ct ContentType) CallReqOptionFunc[T] {
+func ContentType[T any](ct string) CallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) error {
 		c.ReqContentType = ct
-		return ConfigureHeader(req, "content-type", ct.String(), true)
+		return ConfigureHeader(req, "content-type", ct, true)
 	}
 }
 
@@ -85,14 +85,14 @@ func ConfigureHeader(req Request, key, value string, override bool) error {
 	return nil
 }
 
-func WithMethod[T any](method string) CallReqOptionFunc[T] {
+func Method[T any](method string) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) (err error) {
 		req.SetMethod(method)
 		return
 	}
 }
 
-func WithURL[T any](raw string) CallReqOptionFunc[T] {
+func URL[T any](raw string) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) (err error) {
 		u, err := url.Parse(raw)
 		if err != nil {
@@ -105,21 +105,21 @@ func WithURL[T any](raw string) CallReqOptionFunc[T] {
 	}
 }
 
-func WithURI[T any](raw string) CallReqOptionFunc[T] {
+func URI[T any](raw string) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) (err error) {
 		req.SetURL(req.URL().JoinPath(raw))
 		return
 	}
 }
 
-func WithRawBody[T any](payload []byte) CallReqOptionFunc[T] {
+func RawBody[T any](payload []byte) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) (err error) {
 		req.SetBody(payload)
 		return nil
 	}
 }
 
-func WithBody[T any](payload any) CallReqOptionFunc[T] {
+func Body[T any](payload any) CallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) (err error) {
 		data, err := EncodeBody(payload, c.ReqContentType)
 		if err != nil {
@@ -130,7 +130,7 @@ func WithBody[T any](payload any) CallReqOptionFunc[T] {
 	}
 }
 
-func WithRequestSniffer[T any](fn func([]byte, error)) CallReqOptionFunc[T] {
+func RequestSniffer[T any](fn func([]byte, error)) CallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) error {
 		c.ReqShouldSniff = true
 		c.ReqStreamSniffer = fn
@@ -138,7 +138,7 @@ func WithRequestSniffer[T any](fn func([]byte, error)) CallReqOptionFunc[T] {
 	}
 }
 
-func WithRequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] {
+func RequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) error {
 		c.ReqIsStream = true
 
@@ -150,7 +150,7 @@ func WithRequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] 
 
 			var encoder codec.Encoder
 			if r.Serialize() {
-				encoder, err = c.ReqContentType.Codec()
+				encoder, err = ContentTypeCodec(c.ReqContentType)
 
 				if err != nil {
 					return
@@ -175,15 +175,15 @@ func WithRequestStreamBody[T, U any](r rangeable[U]) StreamCallReqOptionFunc[T] 
 	}
 }
 
-func WithBodyStream[T any](rc io.ReadWriteCloser, bodySize int) CallReqOptionFunc[T] {
+func BodyStream[T any](rc io.ReadWriteCloser, bodySize int) CallReqOptionFunc[T] {
 	return func(c *Call[T], req Request) (err error) {
 		req.SetBodyStream(rc, bodySize)
 		return nil
 	}
 }
 
-func EncodeBody(payload any, contentType ContentType) (bts []byte, err error) {
-	encoder, err := contentType.Codec()
+func EncodeBody(payload any, contentType string) (bts []byte, err error) {
+	encoder, err := ContentTypeCodec(contentType)
 	if err != nil {
 		return
 	}

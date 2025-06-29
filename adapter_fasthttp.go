@@ -47,7 +47,7 @@ func (a *fastHttpReqAdapter) SetHeader(key, value string) {
 
 func (a *fastHttpReqAdapter) Header(key string) (string, bool) {
 	data := a.req.Header.Peek(key)
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return "", false
 	}
 	bts := make([]byte, len(data))
@@ -137,11 +137,11 @@ func (a *FastHttpHttpClientAdapter) Do(_ context.Context, req Request) (Response
 	return adaptResFastHttp(res), err
 }
 
-func WithFasthttp() *FastHttpHttpClientAdapter {
+func Fasthttp() *FastHttpHttpClientAdapter {
 	return newFastHttpHttpClientAdapter(fastClient)
 }
 
-func WithFasthttpClient(cli *fasthttp.Client) *FastHttpHttpClientAdapter {
+func FasthttpClient(cli *fasthttp.Client) *FastHttpHttpClientAdapter {
 	return newFastHttpHttpClientAdapter(cli)
 }
 
@@ -183,7 +183,7 @@ func (a *fastHttpResAdapter) SetHeader(key, value string) {
 
 func (a *fastHttpResAdapter) Header(key string) (string, bool) {
 	data := a.res.Header.Peek(key)
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return "", false
 	}
 	bts := make([]byte, len(data))

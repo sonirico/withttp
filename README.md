@@ -1,19 +1,109 @@
-![build](https://github.com/sonirico/withttp/actions/workflows/go.yml/badge.svg)
+<div align="center">
 
-# withttp
+# 🎯 withttp
 
-Build http requests and parse their responses with fluent syntax and wit. This package aims
-to quickly configure http roundtrips by covering common scenarios, while leaving all details
-of http requests and responses open for developers to allow maximum flexibility.
+**Build HTTP requests and parse responses with fluent syntax and wit**
 
-Supported underlying http implementations are:
+[![Build Status](https://github.com/sonirico/withttp/actions/workflows/go.yml/badge.svg)](https://github.com/sonirico/withttp/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sonirico/withttp)](https://goreportcard.com/report/github.com/sonirico/withttp)
+[![GoDoc](https://godoc.org/github.com/sonirico/withttp?status.svg)](https://godoc.org/github.com/sonirico/withttp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/dl/)
 
- - [net/http](https://pkg.go.dev/net/http)
- - [fasthttp](https://pkg.go.dev/github.com/valyala/fasthttp)
- - Wrap your client with [Client interface](https://github.com/sonirico/withttp/blob/main/endpoint.go#L43) ...
- - ... or open an issue to include your preferred one!
+*A fluent HTTP client library that covers common scenarios while maintaining maximum flexibility*
 
-#### Query Restful endpoints
+</div>
+
+---
+
+## 🚀 Features
+
+- **🔄 Fluent API** - Chain methods for intuitive request building
+- **📡 Multiple HTTP Backends** - Support for `net/http` and `fasthttp`
+- **🎯 Type-Safe Responses** - Generic-based response parsing
+- **📊 Streaming Support** - Stream data from slices, channels, or readers
+- **🧪 Mock-Friendly** - Built-in mocking capabilities for testing
+- **⚡ High Performance** - Optimized for speed and low allocations
+
+## 📦 Installation
+
+```bash
+go get github.com/sonirico/withttp
+```
+
+## 🎛️ Supported HTTP Implementations
+
+| Implementation                                             | Description                                                                                     |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [net/http](https://pkg.go.dev/net/http)                    | Go's standard HTTP client                                                                       |
+| [fasthttp](https://pkg.go.dev/github.com/valyala/fasthttp) | High-performance HTTP client                                                                    |
+| Custom Client                                              | Implement the [Client interface](https://github.com/sonirico/withttp/blob/main/endpoint.go#L43) |
+
+> 💡 Missing your preferred HTTP client? [Open an issue](https://github.com/sonirico/withttp/issues/new) and let us know!
+
+## 📚 Table of Contents
+
+- [🎯 withttp](#-withttp)
+  - [🚀 Features](#-features)
+  - [📦 Installation](#-installation)
+  - [🎛️ Supported HTTP Implementations](#️-supported-http-implementations)
+  - [📚 Table of Contents](#-table-of-contents)
+  - [🏁 Quick Start](#-quick-start)
+  - [💡 Examples](#-examples)
+    - [RESTful API Queries](#restful-api-queries)
+    - [Streaming Data](#streaming-data)
+      - [📄 Stream from Slice](#-stream-from-slice)
+      - [📡 Stream from Channel](#-stream-from-channel)
+      - [📖 Stream from Reader](#-stream-from-reader)
+    - [Multiple Endpoints](#multiple-endpoints)
+    - [Testing with Mocks](#testing-with-mocks)
+  - [🗺️ Roadmap](#️-roadmap)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+  - [⭐ Show Your Support](#-show-your-support)
+
+## 🏁 Quick Start
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "net/http"
+    
+    "github.com/sonirico/withttp"
+)
+
+type GithubRepo struct {
+    ID   int    `json:"id"`
+    Name string `json:"name"`
+    URL  string `json:"html_url"`
+}
+
+func main() {
+    call := withttp.NewCall[GithubRepo](withttp.Fasthttp()).
+        URL("https://api.github.com/repos/sonirico/withttp").
+        Method(http.MethodGet).
+        Header("User-Agent", "withttp-example/1.0", false).
+        ParseJSON().
+        ExpectedStatusCodes(http.StatusOK)
+
+    err := call.Call(context.Background())
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Repository: %s (ID: %d)\n", call.BodyParsed.Name, call.BodyParsed.ID)
+}
+```
+
+## 💡 Examples
+
+### RESTful API Queries
+
+<details>
+<summary>Click to expand</summary>
 
 ```go
 type GithubRepoInfo struct {
@@ -22,16 +112,14 @@ type GithubRepoInfo struct {
 }
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
-
-  call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
-    WithURL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
-    WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
-    WithParseJSON().
-    WithExpectedStatusCodes(http.StatusOK)
+  call := withttp.NewCall[GithubRepoInfo](withttp.Fasthttp()).
+    URL(fmt.Sprintf("https://api.github.com/repos/%s/%s", user, repo)).
+    Method(http.MethodGet).
+    Header("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
+    ParseJSON().
+    ExpectedStatusCodes(http.StatusOK)
 
   err := call.Call(context.Background())
-
   return call.BodyParsed, err
 }
 
@@ -41,7 +129,14 @@ func main() {
 }
 ```
 
-#### Stream data to server (from a slice)
+</details>
+
+### Streaming Data
+
+#### 📄 Stream from Slice
+
+<details>
+<summary>View example</summary>
 
 [See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
 
@@ -53,39 +148,33 @@ type metric struct {
 
 func CreateStream() error {
   points := []metric{
-    {
-      Time: time.Unix(time.Now().Unix()-1, 0),
-      Temp: 39,
-    },
-    {
-      Time: time.Now(),
-      Temp: 40,
-    },
+    {Time: time.Unix(time.Now().Unix()-1, 0), Temp: 39},
+    {Time: time.Now(), Temp: 40},
   }
 
   stream := withttp.Slice[metric](points)
-
   testEndpoint := withttp.NewEndpoint("webhook-site-request-stream-example").
-    Request(
-      withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
-    )
+    Request(withttp.BaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"))
 
-  call := withttp.NewCall[any](withttp.WithFasthttp()).
-    WithMethod(http.MethodPost).
-    WithContentType(withttp.ContentTypeJSONEachRow).
-    WithRequestSniffed(func(data []byte, err error) {
+  call := withttp.NewCall[any](withttp.Fasthttp()).
+    Method(http.MethodPost).
+    ContentType(withttp.ContentTypeJSONEachRow).
+    RequestSniffed(func(data []byte, err error) {
       fmt.Printf("recv: '%s', err: %v", string(data), err)
     }).
-    WithRequestStreamBody(
-      withttp.WithRequestStreamBody[any, metric](stream),
-    ).
-    WithExpectedStatusCodes(http.StatusOK)
+    RequestStreamBody(withttp.RequestStreamBody[any, metric](stream)).
+    ExpectedStatusCodes(http.StatusOK)
 
   return call.CallEndpoint(context.Background(), testEndpoint)
 }
 ```
 
-#### Stream data to server (from a channel)
+</details>
+
+#### 📡 Stream from Channel
+
+<details>
+<summary>View example</summary>
 
 [See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
 
@@ -94,42 +183,34 @@ func CreateStreamChannel() error {
   points := make(chan metric, 2)
 
   go func() {
-    points <- metric{
-      Time: time.Unix(time.Now().Unix()-1, 0),
-      Temp: 39,
-    }
-
-    points <- metric{
-      Time: time.Now(),
-      Temp: 40,
-    }
-
+    points <- metric{Time: time.Unix(time.Now().Unix()-1, 0), Temp: 39}
+    points <- metric{Time: time.Now(), Temp: 40}
     close(points)
   }()
 
   stream := withttp.Channel[metric](points)
-
   testEndpoint := withttp.NewEndpoint("webhook-site-request-stream-example").
-    Request(
-      withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
-    )
+    Request(withttp.BaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"))
 
-  call := withttp.NewCall[any](withttp.WithFasthttp()).
-    WithMethod(http.MethodPost).
-    WithContentType(withttp.ContentTypeJSONEachRow).
-    WithRequestSniffed(func(data []byte, err error) {
+  call := withttp.NewCall[any](withttp.Fasthttp()).
+    Method(http.MethodPost).
+    ContentType(withttp.ContentTypeJSONEachRow).
+    RequestSniffed(func(data []byte, err error) {
       fmt.Printf("recv: '%s', err: %v", string(data), err)
     }).
-    WithRequestStreamBody(
-      withttp.WithRequestStreamBody[any, metric](stream),
-    ).
-    WithExpectedStatusCodes(http.StatusOK)
+    RequestStreamBody(withttp.RequestStreamBody[any, metric](stream)).
+    ExpectedStatusCodes(http.StatusOK)
 
   return call.CallEndpoint(context.Background(), testEndpoint)
 }
 ```
 
-#### Stream data to server (from a reader)
+</details>
+
+#### 📖 Stream from Reader
+
+<details>
+<summary>View example</summary>
 
 [See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
 
@@ -143,38 +224,36 @@ func CreateStreamReader() error {
   }()
 
   streamFactory := withttp.NewProxyStreamFactory(1 << 10)
-
   stream := withttp.NewStreamFromReader(buf, streamFactory)
-
   testEndpoint := withttp.NewEndpoint("webhook-site-request-stream-example").
-    Request(
-      withttp.WithBaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"),
-    )
+    Request(withttp.BaseURL("https://webhook.site/24e84e8f-75cf-4239-828e-8bed244c0afb"))
 
-  call := withttp.NewCall[any](withttp.WithNetHttp()).
-    WithMethod(http.MethodPost).
-    WithRequestSniffed(func(data []byte, err error) {
+  call := withttp.NewCall[any](withttp.NetHttp()).
+    Method(http.MethodPost).
+    RequestSniffed(func(data []byte, err error) {
       fmt.Printf("recv: '%s', err: %v", string(data), err)
     }).
-    WithContentType(withttp.ContentTypeJSONEachRow).
-    WithRequestStreamBody(
-      withttp.WithRequestStreamBody[any, []byte](stream),
-    ).
-    WithExpectedStatusCodes(http.StatusOK)
+    ContentType(withttp.ContentTypeJSONEachRow).
+    RequestStreamBody(withttp.RequestStreamBody[any, []byte](stream)).
+    ExpectedStatusCodes(http.StatusOK)
 
   return call.CallEndpoint(context.Background(), testEndpoint)
 }
 ```
 
-#### Several endpoints
+</details>
 
-In case of a wide range catalog of endpoints, predefined parameters and behaviours can be
-defined by employing an endpoint definition.
+### Multiple Endpoints
+
+<details>
+<summary>Click to expand</summary>
+
+Define reusable endpoint configurations for API consistency:
 
 ```go
 var (
   githubApi = withttp.NewEndpoint("GithubAPI").
-    Request(withttp.WithBaseURL("https://api.github.com/"))
+    Request(withttp.BaseURL("https://api.github.com/"))
 )
 
 type GithubRepoInfo struct {
@@ -183,21 +262,17 @@ type GithubRepoInfo struct {
 }
 
 func GetRepoInfo(user, repo string) (GithubRepoInfo, error) {
-  call := withttp.NewCall[GithubRepoInfo](withttp.WithFasthttp()).
-    WithURI(fmt.Sprintf("repos/%s/%s", user, repo)).
-    WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
-    WithHeaderFunc(func() (key, value string, override bool) {
-      key = "X-Date"
-      value = time.Now().String()
-      override = true
-      return
+  call := withttp.NewCall[GithubRepoInfo](withttp.Fasthttp()).
+    URI(fmt.Sprintf("repos/%s/%s", user, repo)).
+    Method(http.MethodGet).
+    Header("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
+    HeaderFunc(func() (key, value string, override bool) {
+      return "X-Date", time.Now().String(), true
     }).
-    WithParseJSON().
-    WithExpectedStatusCodes(http.StatusOK)
+    ParseJSON().
+    ExpectedStatusCodes(http.StatusOK)
 
   err := call.CallEndpoint(context.Background(), githubApi)
-
   return call.BodyParsed, err
 }
 
@@ -213,29 +288,19 @@ func CreateRepoIssue(user, repo, title, body, assignee string) (GithubCreateIssu
     Assignee string `json:"assignee"`
   }
 
-  p := payload{
-    Title:    title,
-    Body:     body,
-    Assignee: assignee,
-  }
+  p := payload{Title: title, Body: body, Assignee: assignee}
 
-  call := withttp.NewCall[GithubCreateIssueResponse](
-    withttp.WithFasthttp(),
-  ).
-    WithURI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
-    WithMethod(http.MethodPost).
-    WithContentType("application/vnd+github+json").
-    WithBody(p).
-    WithHeaderFunc(func() (key, value string, override bool) {
-      key = "Authorization"
-      value = fmt.Sprintf("Bearer %s", "S3cret")
-      override = true
-      return
+  call := withttp.NewCall[GithubCreateIssueResponse](withttp.Fasthttp()).
+    URI(fmt.Sprintf("repos/%s/%s/issues", user, repo)).
+    Method(http.MethodPost).
+    ContentType("application/vnd+github+json").
+    Body(p).
+    HeaderFunc(func() (key, value string, override bool) {
+      return "Authorization", fmt.Sprintf("Bearer %s", "S3cret"), true
     }).
-    WithExpectedStatusCodes(http.StatusCreated)
+    ExpectedStatusCodes(http.StatusCreated)
 
   err := call.CallEndpoint(context.Background(), githubApi)
-
   log.Println("req body", string(call.Req.Body()))
 
   return call.BodyParsed, err
@@ -247,22 +312,26 @@ func main() {
   log.Println(info)
 
   // Create an issue
-  res, err := CreateRepoIssue("sonirico", "withttp", "test",
-    "This is a test", "sonirico")
+  res, err := CreateRepoIssue("sonirico", "withttp", "test", "This is a test", "sonirico")
   log.Println(res, err)
 }
 ```
 
-#### Test your calls again a mock endpoint
+</details>
 
-Quickly test your calls by creating a mock endpoint
+### Testing with Mocks
+
+<details>
+<summary>Click to expand</summary>
+
+Easily test your HTTP calls with built-in mocking:
 
 ```go
 var (
   exchangeListOrders = withttp.NewEndpoint("ListOrders").
-        Request(withttp.WithBaseURL("http://example.com")).
-        Response(
-      withttp.WithMockedRes(func(res withttp.Response) {
+    Request(withttp.BaseURL("http://example.com")).
+    Response(
+      withttp.MockedRes(func(res withttp.Response) {
         res.SetBody(io.NopCloser(bytes.NewReader(mockResponse)))
         res.SetStatus(http.StatusOK)
       }),
@@ -280,12 +349,12 @@ func main() {
 
   res := make(chan Order)
 
-  call := withttp.NewCall[Order](withttp.WithFasthttp()).
-    WithURL("https://github.com/").
-    WithMethod(http.MethodGet).
-    WithHeader("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
-    WithParseJSONEachRowChan(res).
-    WithExpectedStatusCodes(http.StatusOK)
+  call := withttp.NewCall[Order](withttp.Fasthttp()).
+    URL("https://github.com/").
+    Method(http.MethodGet).
+    Header("User-Agent", "withttp/0.5.1 See https://github.com/sonirico/withttp", false).
+    ParseJSONEachRowChan(res).
+    ExpectedStatusCodes(http.StatusOK)
 
   go func() {
     for order := range res {
@@ -294,18 +363,51 @@ func main() {
   }()
 
   err := call.CallEndpoint(context.Background(), exchangeListOrders)
-
   if err != nil {
     panic(err)
   }
 }
 ```
 
-### TODO:
+</details>
 
-- Form-data content type codecs
-- More quality-of-life methods for auth
-- Able to parse more content types:
-  - tabular separated
-  - xml
-  - gRPC
+## 🗺️ Roadmap
+
+| Feature                       | Status        |
+| ----------------------------- | ------------- |
+| Form-data content type codecs | 🔄 In Progress |
+| Enhanced auth methods         | 📋 Planned     |
+| XML parsing support           | 📋 Planned     |
+| Tabular data support          | 📋 Planned     |
+| gRPC integration              | 🤔 Considering |
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⭐ Show Your Support
+
+If this project helped you, please give it a ⭐! It helps others discover the project.
+
+---
+
+<div align="center">
+
+**[Documentation](https://godoc.org/github.com/sonirico/withttp)** • 
+**[Examples](https://github.com/sonirico/withttp/tree/main/examples)** • 
+**[Issues](https://github.com/sonirico/withttp/issues)** • 
+**[Discussions](https://github.com/sonirico/withttp/discussions)**
+
+Made with ❤️ by [sonirico](https://github.com/sonirico)
+
+</div>

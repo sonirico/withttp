@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/sonirico/stadio/slices"
+	"github.com/sonirico/vago/slices"
 )
 
 type (

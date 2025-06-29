@@ -98,12 +98,12 @@ func (a *NativeHttpClientAdapter) Do(ctx context.Context, req Request) (Response
 	return adaptResNative(res), err
 }
 
-func WithNetHttpClient(cli *http.Client) *NativeHttpClientAdapter {
+func NetHttpClient(cli *http.Client) *NativeHttpClientAdapter {
 	return &NativeHttpClientAdapter{cli: cli}
 }
 
-func WithNetHttp() *NativeHttpClientAdapter {
-	return WithNetHttpClient(http.DefaultClient)
+func NetHttp() *NativeHttpClientAdapter {
+	return NetHttpClient(http.DefaultClient)
 }
 
 func adaptResNative(res *http.Response) Response {

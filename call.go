@@ -34,7 +34,7 @@ type (
 		BodyRaw    []byte
 		BodyParsed T
 
-		ReqContentType ContentType
+		ReqContentType string
 		ReqBodyRaw     []byte
 		ReqIsStream    bool
 

@@ -40,9 +40,9 @@ help:
 	@echo "make bench - run go test including benchmarking"
 
 
-.PHONY: format
-format:
-	$(info: Make: Format)
+.PHONY: fmt
+fmt:
+	$(info: Make: fmt)
 	gofmt -w ./**/*.go
 	gofmt -w ./*.go
 	goimports -w ./**/*.go

@@ -66,7 +66,7 @@ func TestCall_StreamingRequestFromSlice(t *testing.T) {
 	}
 
 	endpoint := NewEndpoint("mock").
-		Response(WithMockedRes(func(res Response) {
+		Response(MockedRes(func(res Response) {
 			res.SetStatus(http.StatusOK)
 			res.SetBody(io.NopCloser(bytes.NewReader(nil)))
 		}))
@@ -76,11 +76,11 @@ func TestCall_StreamingRequestFromSlice(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 
 			call := NewCall[any](NewMockHttpClientAdapter()).
-				WithContentType(ContentTypeJSONEachRow).
-				WithRequestStreamBody(
-					WithRequestStreamBody[any, payload](Slice[payload](test.args.Stream)),
+				ContentType(ContentTypeJSONEachRow).
+				RequestStreamBody(
+					RequestStreamBody[any, payload](Slice[payload](test.args.Stream)),
 				).
-				WithExpectedStatusCodes(http.StatusOK)
+				ExpectedStatusCodes(http.StatusOK)
 
 			err := call.CallEndpoint(context.TODO(), endpoint)
 
