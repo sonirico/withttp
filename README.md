@@ -100,6 +100,11 @@ func main() {
 
 ## 💡 Examples
 
+All examples are now available as:
+- **Example functions** in the test files - you can run these with `go test -v -run "^Example"`
+- **Test functions** for comprehensive testing scenarios
+- **Documentation examples** in the code itself
+
 ### RESTful API Queries
 
 <details>
@@ -138,7 +143,7 @@ func main() {
 <details>
 <summary>View example</summary>
 
-[See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
+[See test example](https://github.com/sonirico/withttp/blob/main/examples_request_stream_test.go)
 
 ```go
 type metric struct {
@@ -176,7 +181,7 @@ func CreateStream() error {
 <details>
 <summary>View example</summary>
 
-[See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
+[See test example](https://github.com/sonirico/withttp/blob/main/examples_request_stream_test.go)
 
 ```go
 func CreateStreamChannel() error {
@@ -212,7 +217,7 @@ func CreateStreamChannel() error {
 <details>
 <summary>View example</summary>
 
-[See full example](https://github.com/sonirico/withttp/blob/main/examples/request_stream/main.go)
+[See test example](https://github.com/sonirico/withttp/blob/main/examples_request_stream_test.go)
 
 ```go
 func CreateStreamReader() error {
@@ -404,7 +409,7 @@ If this project helped you, please give it a ⭐! It helps others discover the p
 <div align="center">
 
 **[Documentation](https://godoc.org/github.com/sonirico/withttp)** • 
-**[Examples](https://github.com/sonirico/withttp/tree/main/examples)** • 
+**[Test Examples](https://github.com/sonirico/withttp/blob/main/)** • 
 **[Issues](https://github.com/sonirico/withttp/issues)** • 
 **[Discussions](https://github.com/sonirico/withttp/discussions)**
 
