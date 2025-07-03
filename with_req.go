@@ -92,6 +92,17 @@ func Method[T any](method string) CallReqOptionFunc[T] {
 	}
 }
 
+func Query[T any](k, v string) CallReqOptionFunc[T] {
+	return func(_ *Call[T], req Request) (err error) {
+		u := req.URL()
+		qs := u.Query()
+		qs.Set(k, v)
+		u.RawQuery = qs.Encode()
+		req.SetURL(u)
+		return
+	}
+}
+
 func URL[T any](raw string) CallReqOptionFunc[T] {
 	return func(_ *Call[T], req Request) (err error) {
 		u, err := url.Parse(raw)

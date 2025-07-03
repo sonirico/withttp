@@ -38,6 +38,10 @@ func (c *Call[T]) Method(method string) *Call[T] {
 	return c.withReq(Method[T](method))
 }
 
+func (c *Call[T]) Query(k, v string) *Call[T] {
+	return c.withReq(Query[T](k, v))
+}
+
 func (c *Call[T]) RequestSniffed(fn func([]byte, error)) *Call[T] {
 	return c.withReq(RequestSniffer[T](fn))
 }
